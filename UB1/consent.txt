@@ -1,0 +1,23 @@
+Wir, die Übungsleitung der Lehrveranstaltung Programmieren unter der Leitung von Prof. Dr.-Ing. Anne Koziolek, bitten um Ihr Einverständnis, die Abgaben, die Sie im Rahmen der Lehrveranstaltung Programmieren auf der Abgabeplattform Artemis einreichen, zu Forschungszwecken zu verwenden und zu verarbeiten. Für Forschungsprojekte am KIT und darüber hinaus planen wir Folgendes:
+
+1. Wir möchten Ihre Abgaben nach Ende der Lehrveranstaltung sorgfältig pseudonymisieren, sodass keinerlei Verbindung der Abgaben mit Ihrer Person mehr hergestellt werden können. Dabei werden Ihre personenbezogenen Daten wie Name und SCC-Nutzerkennung (u-Kürzel) aus Ordner- und Dateinamen sowie den Quelltextdateien entfernt. Die pseudonymisieren Abgaben möchten wir langfristig speichern.
+
+2. Die pseudonymisieren Abgaben möchten wir in aktuellen und zukünftigen Forschungsprojekten einsetzen und verarbeiten; beispielsweise Eigenschaften des Quelltexts untersuchen und messen, den Quelltext auf bestimmte Art und Weise verändern und/oder das resultierende Programm ausführen.
+
+3. Die pseudonymisieren Abgaben möchten wir gemeinsam mit den Forschungsprojekten veröffentlichen, um unsere Arbeit für die internationale Forschungsgemeinschaft zugänglich und nachvollziehbar zu machen. Anschließend können die Abgaben auch von anderen Forschenden für ihre Arbeit verwendet werden.
+
+
+Ihre Abgaben sind für die Forschung von großem Wert, die sich z.B. damit beschäftigt, wie Programmieren-Lehrveranstaltungen strukturiert und verbessert werden können und wie vielfältig Ihre Lösungen derselben Aufgabenstellung sind.
+
+Wir betonen, dass die Einwilligung freiwillig ist und widerrufen werden kann. Ihre Ablehung oder Widerruf der Einwilligung wird ohne Rückfrage respektiert und es entsteht Ihnen keinerlei Nachteil daraus. Insbesondere hat Ihre Einwilligung keinerlei Auswirkung auf Ihren Erfolg bei den Prüfungsleistungen "Übungsschein Programmieren" und "Programmieren".
+
+Um die Einwilligung zu widerrufen, wenden Sie sich an die Übungsleitung Programmieren unter vorlesung-programmieren@cs.kit.edu. Die bis zum Zeitpunkt des Widerrufs erfolgte Verarbeitung der Abgaben bleibt rechtmäßig.
+
+Einverständiserklärung
+
+Hiermit erkläre ich mich dazu bereit, meine Abgaben unter den oben beschriebenen Umständen zur Verfügung zu stellen. Meine Einwilligung ist freiwillig und kann jederzeit widerrufen werden. 
+
+Nachname, Vorname: Duy Nhat Khang, Nguyen
+SCC-Nutzerkennung: udqch
+
+ja [x]	nein [ ]
