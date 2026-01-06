@@ -1,13 +1,17 @@
 public abstract class Employee extends User {
-    private int personalNr;
+    private int personnelNr;
 
-    public Employee(String firstName, String lastName, int personalNr, String password) {
+    public Employee(String firstName, String lastName, int personnelNr, String password) {
         super(firstName, lastName, password);
-        this.personalNr = personalNr;
+        this.personnelNr = personnelNr;
     }
 
     @Override
     public String getID() {
-        return String.valueOf(this.personalNr);
+        return String.valueOf(this.personnelNr);
+    }
+
+    public int getPersonnelNr() {
+        return this.personnelNr;
     }
 }

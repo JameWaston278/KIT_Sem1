@@ -6,16 +6,16 @@ public enum MailType {
     PAKET_M("PaketM", 600),
     PAKET_L("PaketL", 700);
 
-    private final String type;
+    private final String label;
     private final int price;
 
-    private MailType(String type, int price) {
-        this.type = type;
+    private MailType(String label, int price) {
+        this.label = label;
         this.price = price;
     }
 
     public String getType() {
-        return type;
+        return label;
     }
 
     public double getPrice() {
@@ -24,7 +24,7 @@ public enum MailType {
 
     public static MailType fromString(String input) {
         for (MailType mail : values()) {
-            if (mail.type.equals(input)) {
+            if (mail.label.equals(input)) {
                 return mail;
             }
         }

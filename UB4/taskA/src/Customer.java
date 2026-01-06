@@ -1,16 +1,20 @@
 public class Customer extends User {
-    private String username;
-    private String personalNr;
+    private String userName;
+    private String idCard;
 
-    public Customer(String firstName, String lastName, String usernamer, String password, String personalNr) {
+    public Customer(String firstName, String lastName, String userName, String password, String idCard) {
         super(firstName, lastName, password);
 
-        this.username = usernamer;
-        this.personalNr = personalNr;
+        this.userName = userName;
+        this.idCard = idCard;
     }
 
     @Override
     public String getID() {
-        return this.username;
+        return this.userName;
+    }
+
+    public String getIDcard() {
+        return this.idCard;
     }
 }
