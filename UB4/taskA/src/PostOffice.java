@@ -2,7 +2,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PostOffice {
-    private Map<String, User> users = new HashMap<>();
+
+    @FunctionalInterface
+    private interface EmployeeFactory {
+        Employee create(String firstName, String lastName, int personnelID, String password);
+    }
+
+    private final Map<String, User> users = new HashMap<>();
     private User currentUser = null;
 
     private void validateFormat(String input, String regex, String errorMessage) throws ErrorExeption {
@@ -11,14 +17,7 @@ public class PostOffice {
         }
     }
 
-    public void checkUniqeIdentifier(String input) throws ErrorExeption {
-        if (users.containsKey(input)) {
-            throw new ErrorExeption("user with this identifier already exists.");
-        }
-    }
-
-    public void addCustomer(String firstName, String lastName, String userName, String password, String idCard)
-            throws ErrorExeption {
+    private void validateBasicInfo(String firstName, String lastName, String password) throws ErrorExeption {
         // check login status
         if (this.currentUser != null) {
             throw new ErrorExeption("operation can not be performed while a user logged in.");
@@ -27,15 +26,26 @@ public class PostOffice {
         // validate input format
         validateFormat(firstName, "[^;\\n\\r]+", "first name contains invalid characters.");
         validateFormat(lastName, "[^;\\n\\r]+", "last name contains invalid characters.");
-        validateFormat(userName, "[a-zA-Z0-9]{4-9}",
-                "incorrect format, user name must be between 4 and 9 characters and contain no invalid characters.");
         validateFormat(password, "[a-zA-Z0-9]{4-9}",
                 "incorrect format, password must be between 4 and 9 characters and contain no invalid characters.");
+
+    }
+
+    public void addCustomer(String firstName, String lastName, String userName, String password, String idCard)
+            throws ErrorExeption {
+        // validate basic information of customer
+        validateBasicInfo(firstName, lastName, password);
+
+        // validate username and ID Card number
+        validateFormat(userName, "[a-zA-Z0-9]{4-9}",
+                "incorrect format, user name must be between 4 and 9 characters and contain no invalid characters.");
         validateFormat(idCard, "[0-9]{9}",
                 "incorrect format, ID card number must be numeric and exactly 9 characters.");
 
         // validate unique of username and ID Card number
-        checkUniqeIdentifier(userName);
+        if (users.containsKey(userName)) {
+            throw new ErrorExeption("customer with this username already exists.");
+        }
         for (User u : users.values()) {
             if (u instanceof Customer existingCustomer) {
                 if (existingCustomer.getIDcard().equals(idCard)) {
@@ -49,27 +59,64 @@ public class PostOffice {
         users.put(userName, newCustomer);
     }
 
-    public void addEmployee(String role, String firstName, String lastName, String personnelNr, String password)
+    private void addEmployee(String firstName, String lastName, String personnelNr, String password,
+            EmployeeFactory factory)
             throws ErrorExeption {
-        // check login status
-        if (this.currentUser != null) {
-            throw new ErrorExeption("operation can not be performed while a user logged in.");
-        }
+        // validate basic information of employee
+        validateBasicInfo(firstName, lastName, password);
 
         // validate input format
-        validateFormat(firstName, "[^;\\n\\r]+", "first name contains invalid characters.");
-        validateFormat(lastName, "[^;\\n\\r]+", "last name contains invalid characters.");
         validateFormat(personnelNr, "[0-9]+",
                 "incorrect format, ID card number must be numeric.");
-        validateFormat(password, "[a-zA-Z0-9]{4-9}",
-                "incorrect format, password must be between 4 and 9 characters and contain no invalid characters.");
 
         // validate unique of username and personal number
-        checkUniqeIdentifier(personnelNr);
+        if (users.containsKey(personnelNr)) {
+            User existingEmployee = users.get(personnelNr);
+            if (existingEmployee instanceof Employee) {
+                throw new ErrorExeption("employee with this personnel number already exists.");
+            } else {
+                throw new ErrorExeption("the identifier " + personnelNr + " is occupied.");
+            }
+        }
 
         // register new employee
-        if (role.equals("Mailman")){
-            
+        int personnelID = Integer.parseInt(personnelNr);
+        Employee newEmployee = factory.create(firstName, lastName, personnelID, password);
+        users.put(personnelNr, newEmployee);
+    }
+
+    public void addMailman(String firstName, String lastName, String personnelNr, String password)
+            throws ErrorExeption {
+        addEmployee(firstName, lastName, personnelNr, password, (fn, ln, id, pw) -> new Mailman(fn, ln, id, pw));
+    }
+
+    public void addAgent(String firstName, String lastName, String personnelNr, String password)
+            throws ErrorExeption {
+        addEmployee(firstName, lastName, personnelNr, password, (fn, ln, id, pw) -> new Agent(fn, ln, id, pw));
+    }
+
+    public void authenticate(String userName, String password) throws ErrorExeption {
+        if (this.currentUser != null) {
+            throw new ErrorExeption(
+                    "user is already logged in, please log out first if you want to log in with anther account.");
         }
+
+        User foundUser = users.get(userName);
+        if (foundUser == null) {
+            throw new ErrorExeption("this user " + userName + " does not exist.");
+        }
+        if (!foundUser.checkPassword(password)) {
+            throw new ErrorExeption("incorrect password.");
+        }
+
+        this.currentUser = foundUser;
+    }
+
+    public void logout() throws ErrorExeption {
+        if (this.currentUser == null) {
+            throw new ErrorExeption("no user is authenticated.");
+        }
+
+        this.currentUser = null;
     }
 }
