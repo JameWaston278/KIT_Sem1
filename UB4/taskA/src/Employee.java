@@ -1,5 +1,5 @@
 public abstract class Employee extends User {
-    private int personnelNr;
+    private final int personnelNr;
 
     public Employee(String firstName, String lastName, int personnelNr, String password) {
         super(firstName, lastName, password);

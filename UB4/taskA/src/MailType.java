@@ -14,12 +14,12 @@ public enum MailType {
         this.price = price;
     }
 
-    public String getType() {
+    public String getLabel() {
         return label;
     }
 
-    public double getPrice() {
-        return price / 100;
+    public int getPrice() {
+        return price;
     }
 
     public static MailType fromString(String input) {

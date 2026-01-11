@@ -1,6 +1,6 @@
 public abstract class User {
-    private String firstName;
-    private String lastName;
+    private final String firstName;
+    private final String lastName;
     private String password;
 
     public User(String firstName, String lastName, String password) {
@@ -14,4 +14,16 @@ public abstract class User {
     }
 
     public abstract String getID();
+
+    public String getFirstName() {
+        return this.firstName;
+    }
+
+    public String getLasttName() {
+        return this.lastName;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }

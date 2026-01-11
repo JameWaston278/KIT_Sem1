@@ -1,11 +1,23 @@
 public class MailItem {
-    private MailType type;
-    private String senderUsername;
-    private String receiverUsername;
+    private final MailType type;
+    private final String sender;
+    private final String receiver;
 
-    public MailItem(MailType type, String senderUsername, String receiverUsername) {
+    public MailItem(MailType type, String sender, String receiver) {
         this.type = type;
-        this.senderUsername = senderUsername;
-        this.receiverUsername = receiverUsername;
+        this.sender = sender;
+        this.receiver = receiver;
+    }
+
+    public MailType getType() {
+        return this.type;
+    }
+
+    public String getSender() {
+        return this.sender;
+    }
+
+    public String getReceiver() {
+        return this.receiver;
     }
 }
