@@ -40,14 +40,11 @@ public class PostOfficeUI {
         String rawParams = (parts.length > 1) ? parts[1] : "";
 
         switch (commandName) {
-            case "add-customer" -> processCommand(rawParams, 5,
-                    args -> postOffice.addCustomer(args[0], args[1], args[2], args[3], args[4]));
-            case "add-mailman" ->
-                processCommand(rawParams, 4, args -> postOffice.addMailman(args[0], args[1], args[2], args[3]));
-            case "add-agent" ->
-                processCommand(rawParams, 4, args -> postOffice.addAgent(args[0], args[1], args[2], args[3]));
-            case "authenticate" -> processCommand(rawParams, 2, args -> postOffice.authenticate(args[0], args[1]));
-            case "logout" -> processCommand(rawParams, 0, args -> postOffice.logout());
+            case "add-customer" -> addCustomer(rawParams);
+            case "add-mailman" -> addMailman(rawParams);
+            case "add-agent" -> addAgent(rawParams);
+            case "authenticate" -> authenticate(rawParams);
+            case "logout" -> logout(rawParams);
             case "send-mail" -> sendMail(rawParams);
             case "get-mail" -> getMail(rawParams);
             case "list-mail" -> listMail(rawParams);
@@ -57,7 +54,7 @@ public class PostOfficeUI {
                 parseArguments(rawParams, 0);
                 this.isRunning = false;
             }
-            default -> throw new ErrorException("unkonwn command.");
+            default -> throw new ErrorException("unknown command.");
         }
     }
 
@@ -76,6 +73,9 @@ public class PostOfficeUI {
         }
 
         String[] args = rawParams.split(";", -1);
+        for (int i = 0; i < args.length; i++) {
+            args[i] = args[i].trim();
+        }
         if (args.length != expectedCount) {
             throw new ErrorException(
                     "invalid number of arguments. Expected " + expectedCount + " but got " + args.length);
@@ -87,7 +87,31 @@ public class PostOfficeUI {
         String[] args = parseArguments(rawParams, expectedArgs);
 
         action.execute(args);
+    }
 
+    private void addCustomer(String rawParams) throws ErrorException {
+        processCommand(rawParams, 5,
+                args -> postOffice.addCustomer(args[0], args[1], args[2], args[3], args[4]));
+        System.out.println("OK");
+    }
+
+    private void addMailman(String rawParams) throws ErrorException {
+        processCommand(rawParams, 4, args -> postOffice.addMailman(args[0], args[1], args[2], args[3]));
+        System.out.println("OK");
+    }
+
+    private void addAgent(String rawParams) throws ErrorException {
+        processCommand(rawParams, 4, args -> postOffice.addAgent(args[0], args[1], args[2], args[3]));
+        System.out.println("OK");
+    }
+
+    private void authenticate(String rawParams) throws ErrorException {
+        processCommand(rawParams, 2, args -> postOffice.authenticate(args[0], args[1]));
+        System.out.println("OK");
+    }
+
+    private void logout(String rawParams) throws ErrorException {
+        processCommand(rawParams, 0, args -> postOffice.logout());
         System.out.println("OK");
     }
 
@@ -101,6 +125,7 @@ public class PostOfficeUI {
             throw new ErrorException(
                     "operation failed for unauthorized role.");
         }
+        System.out.println("OK");
     }
 
     private void getMail(String rawParams) throws ErrorException {
@@ -113,6 +138,7 @@ public class PostOfficeUI {
             throw new ErrorException(
                     "operation failed for unauthorized role.");
         }
+        System.out.println("OK");
     }
 
     private void listMail(String rawParams) throws ErrorException {
@@ -140,11 +166,7 @@ public class PostOfficeUI {
     }
 
     private void resetPin(String rawParams) throws ErrorException {
-        User currentUser = postOffice.getCurrentUser();
-        if (currentUser instanceof Agent) {
-            processCommand(rawParams, 3, args -> postOffice.resetPin(args[0], args[1], args[2]));
-        } else {
-            throw new ErrorException("operation failed for unauthorized role.");
-        }
+        processCommand(rawParams, 3, args -> postOffice.resetPin(args[0], args[1], args[2]));
+        System.out.println("OK");
     }
 }

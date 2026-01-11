@@ -55,7 +55,7 @@ public class PostOffice {
         }
         for (User u : users.values()) {
             if (u instanceof Customer existingCustomer) {
-                if (existingCustomer.getIDcard().equals(idCard)) {
+                if (existingCustomer.getIdCard().equals(idCard)) {
                     throw new ErrorException("customer with this ID card number already exists.");
                 }
             }
@@ -87,9 +87,13 @@ public class PostOffice {
         }
 
         // register new employee
-        int personnelID = Integer.parseInt(personnelNr);
-        Employee newEmployee = factory.create(firstName, lastName, personnelID, password);
-        users.put(personnelNr, newEmployee);
+        try {
+            int personnelID = Integer.parseInt(personnelNr);
+            Employee newEmployee = factory.create(firstName, lastName, personnelID, password);
+            users.put(personnelNr, newEmployee);
+        } catch (NumberFormatException e) {
+            throw new ErrorException("personnel number is too large.");
+        }
     }
 
     public void addMailman(String firstName, String lastName, String personnelNr, String password)
@@ -105,7 +109,7 @@ public class PostOffice {
     public void authenticate(String userName, String password) throws ErrorException {
         if (this.currentUser != null) {
             throw new ErrorException(
-                    "operation failed, please log out before authenticatting with a different account.");
+                    "operation failed, please log out before authenticating with a different account.");
         }
 
         User foundUser = users.get(userName);
@@ -199,12 +203,12 @@ public class PostOffice {
         }
         Customer customer = (Customer) users.get(customerUsername);
 
-        if (customer.isMailBoxEmpty()) {
+        Map<MailType, Integer> history = customer.getMailHistory();
+
+        if (history.isEmpty()) {
             System.out.println("OK");
             return;
         }
-
-        Map<MailType, Integer> history = customer.getMailHistory();
 
         List<MailType> sortedTypes = getSortedMailTypes(history.keySet());
 
@@ -219,12 +223,17 @@ public class PostOffice {
     }
 
     public void resetPin(String userName, String idCard, String password) throws ErrorException {
+        if (!(currentUser instanceof Agent)) {
+            throw new ErrorException(
+                    "operation failed for unauthorized role, only agents have authority to reset PIN.");
+        }
+
         if (!users.containsKey(userName) || !(users.get(userName) instanceof Customer)) {
             throw new ErrorException("customer with this username does not exist.");
         }
         Customer customer = (Customer) users.get(userName);
 
-        if (!customer.getIDcard().equals(idCard)) {
+        if (!customer.getIdCard().equals(idCard)) {
             throw new ErrorException("ID card number does not match.");
         }
 

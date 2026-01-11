@@ -22,7 +22,7 @@ public class Customer extends User {
         return this.userName;
     }
 
-    public String getIDcard() {
+    public String getIdCard() {
         return this.idCard;
     }
 
@@ -43,6 +43,9 @@ public class Customer extends User {
     }
 
     public void fetchMail() throws ErrorException {
+        if (!isMailBoxEmpty()) {
+            throw new ErrorException("mailbox is empty.");
+        }
         this.mailBox.remove(0);
     }
 

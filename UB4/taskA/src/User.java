@@ -19,7 +19,7 @@ public abstract class User {
         return this.firstName;
     }
 
-    public String getLasttName() {
+    public String getLastName() {
         return this.lastName;
     }
 
