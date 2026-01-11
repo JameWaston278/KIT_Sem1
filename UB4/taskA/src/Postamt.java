@@ -2,7 +2,13 @@
  * Main entry point for the Post Office application.
  * Initializes the backend (PostOffice) and the frontend (PostOfficeUI).
  */
-public class Postamt {
+public final class Postamt {
+
+    /**
+     * Private constructor to prevent instantiation.
+     */
+    private Postamt() {
+    }
 
     /**
      * The main method to start the program.

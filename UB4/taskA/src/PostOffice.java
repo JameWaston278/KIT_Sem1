@@ -73,6 +73,9 @@ public class PostOffice {
         // 2. Validate specific customer format
         validateFormat(userName, "[a-zA-Z0-9]{4,9}",
                 "username must be 4-9 alphanumeric characters.");
+        if (userName.matches("[0-9]+")) {
+            throw new ErrorException("username cannot be purely numeric.");
+        }
         validateFormat(idCard, "[0-9]{9}",
                 "id card number must be exactly 9 digits.");
 
@@ -172,10 +175,10 @@ public class PostOffice {
 
         User foundUser = registeredUsers.get(userName);
         if (foundUser == null) {
-            throw new ErrorException("this user " + userName + " does not exist.");
+            throw new ErrorException("this user \"" + userName + "\" does not exist.");
         }
         if (!foundUser.checkPassword(password)) {
-            throw new ErrorException("incorrect password.");
+            throw new ErrorException("incorrect password \"" + password + "\" for user \"" + userName + "\".");
         }
 
         this.currentUser = foundUser;
@@ -233,10 +236,6 @@ public class PostOffice {
             throw new ErrorException("sender is not a registered customer.");
         }
         Customer sender = (Customer) registeredUsers.get(senderUsername);
-
-        if (senderUsername.equals(receiverUsername)) {
-            throw new ErrorException("cannot send mail to oneself.");
-        }
 
         receiver.receiveMail(new MailItem(type, sender.getID(), receiver.getID()));
         sender.recordSentMail(type);
@@ -354,6 +353,9 @@ public class PostOffice {
 
         try {
             int personnelID = Integer.parseInt(personnelId);
+            if (personnelID <= 0) {
+                throw new ErrorException("personnel number must be a positive number.");
+            }
             Employee newEmployee = factory.create(firstName, lastName, personnelID, password);
             registeredUsers.put(personnelId, newEmployee);
         } catch (NumberFormatException e) {

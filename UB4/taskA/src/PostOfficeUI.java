@@ -50,7 +50,7 @@ public class PostOfficeUI {
                 try {
                     dispatchCommand(inputCommand);
                 } catch (ErrorException e) {
-                    System.out.println("ERROR, " + e.getMessage());
+                    System.out.println("Error, " + e.getMessage());
                 }
             }
         }
