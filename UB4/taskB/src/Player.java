@@ -15,6 +15,10 @@ public class Player {
         return this.id;
     }
 
+    public List<Card> getDeck() {
+        return this.deck;
+    }
+
     public String getDeckString() {
         return deck.stream().sorted().map(Card::toString).collect(Collectors.joining(","));
     }
@@ -31,4 +35,16 @@ public class Player {
         return deck.isEmpty();
     }
 
+    public boolean hasCard(Card card) {
+        return deck.contains(card);
+    }
+
+    public Card findCard(String cardName) {
+        for (Card c : deck) {
+            if (c.toString().equals(cardName)) {
+                return c;
+            }
+        }
+        return null;
+    }
 }

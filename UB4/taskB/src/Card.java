@@ -48,7 +48,7 @@ public final class Card implements Comparable<Card> {
         return Objects.hash(rank, suit);
     }
 
-    public boolean canDiscardOn(Card preCard) {
+    public boolean canStackOn(Card preCard) {
         return this.rank == preCard.rank || this.suit == preCard.suit;
     }
 }
