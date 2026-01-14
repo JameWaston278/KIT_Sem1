@@ -1,4 +1,5 @@
 public class ErrorException extends Exception {
+    private final boolean isError;
 
     /**
      * Constructs a new ErrorException with the specified detail message.
@@ -7,5 +8,15 @@ public class ErrorException extends Exception {
      */
     public ErrorException(String message) {
         super(message);
+        this.isError = true;
+    }
+
+    public ErrorException(String message, boolean isError) {
+        super(message);
+        this.isError = false;
+    }
+
+    public boolean isError() {
+        return this.isError;
     }
 }

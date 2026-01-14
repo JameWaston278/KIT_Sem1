@@ -19,6 +19,7 @@ public class MauMauGame {
     private final List<Card> drawPile; // The pile to draw cards from (Aufnahmestapel)
     private final List<Card> discardPile; // The pile to discard cards to (Ablagestapel)
     private boolean isRunning;
+    private boolean endRound;
 
     /**
      * Constructs a new MauMauGame instance.
@@ -32,6 +33,7 @@ public class MauMauGame {
         this.drawPile = new ArrayList<>();
         this.discardPile = new ArrayList<>();
         this.isRunning = true;
+        this.endRound = false;
     }
 
     // GAME CONTROL METHODS (Start, Quit)
@@ -48,7 +50,7 @@ public class MauMauGame {
      */
     public void start(int seed) throws ErrorException {
         if (!this.isRunning) {
-            throw new ErrorException("game has ended and cannot be restarted.");
+            throw new ErrorException(GameMessage.GAME_ENDED.format());
         }
 
         resetGameState();
@@ -104,12 +106,12 @@ public class MauMauGame {
 
         // Check if player actually holds the card
         if (cardToPlay == null) {
-            throw new ErrorException("player " + playerId + " does not have card " + cardName + ".");
+            throw new ErrorException(GameMessage.CARD_NOT_FOUND.format(playerId, cardName));
         }
 
         // Check game rules (Suit/Rank match)
         if (!isValidMove(cardToPlay)) {
-            throw new ErrorException(cardName + " cannot be stacked on " + getTopCard() + ".");
+            throw new ErrorException(GameMessage.INVALID_MOVE.format(cardName, getTopCard().toString()));
         }
 
         // Execute the move
@@ -118,7 +120,8 @@ public class MauMauGame {
 
         // Check winning condition
         if (player.getDeck().isEmpty()) {
-            System.out.println("Game over: Player " + playerId + " has won.");
+            this.endRound = true;
+            throw new ErrorException(GameMessage.GAME_WON.format(this.currentPlayerIndex + 1), false);
         }
 
         nextTurn();
@@ -146,7 +149,8 @@ public class MauMauGame {
 
         // Check draw condition (Game ends in a draw if the last card is picked)
         if (drawPile.isEmpty()) {
-            System.out.println("Game over: Draw.");
+            this.endRound = true;
+            throw new ErrorException(GameMessage.GAME_DRAW.format(), false);
         }
 
         nextTurn();
@@ -158,11 +162,11 @@ public class MauMauGame {
      * Prints the current state of the game piles.
      * Output format: [Top Card Identifier] / [Draw Pile Size]
      */
-    public void showGame() {
+    public void showGame() throws ErrorException {
         if (discardPile.isEmpty()) {
             return;
         }
-        System.out.println(getTopCard().toString() + " / " + drawPile.size());
+        throw new ErrorException(GameMessage.SHOW_GAME.format(getTopCard().toString(), drawPile.size()), false);
     }
 
     /**
@@ -173,7 +177,7 @@ public class MauMauGame {
      */
     public void show(int id) throws ErrorException {
         Player player = getPlayerById(id);
-        System.out.println(player.getDeckString());
+        throw new ErrorException(GameMessage.SHOW.format(player.getDeckString()), false);
     }
 
     // PRIVATE HELPER METHODS
@@ -188,6 +192,7 @@ public class MauMauGame {
         this.discardPile.clear();
         this.drawPile.clear();
         this.currentPlayerIndex = 0;
+        this.endRound = false;
 
         // Create the 32-card deck (Deutsches Blatt)
         for (Suit s : Suit.values()) {
@@ -206,7 +211,7 @@ public class MauMauGame {
      */
     private Player getPlayerById(int id) throws ErrorException {
         if (id < 1 || id > numberOfPlayer) {
-            throw new ErrorException("invalid player ID. Expected 1-" + numberOfPlayer + ".");
+            throw new ErrorException(GameMessage.INVALID_PLAYER_COUNT.format(numberOfPlayer));
         }
         return players.get(id - 1);
     }
@@ -246,7 +251,7 @@ public class MauMauGame {
      */
     private void checkTurn(int playerId) throws ErrorException {
         if ((playerId - 1) != currentPlayerIndex) {
-            throw new ErrorException("it is not player " + playerId + "'s turn.");
+            throw new ErrorException(GameMessage.WRONG_TURN.format(playerId));
         }
     }
 
@@ -255,5 +260,13 @@ public class MauMauGame {
      */
     private void nextTurn() {
         currentPlayerIndex = (currentPlayerIndex + 1) % numberOfPlayer;
+    }
+
+    public boolean isRunning() {
+        return this.isRunning;
+    }
+
+    public boolean endRound() {
+        return this.endRound;
     }
 }
