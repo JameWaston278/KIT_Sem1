@@ -221,7 +221,7 @@ public class MauMauGame {
      */
     private Player getPlayerById(int id) throws GameException {
         if (id < 1 || id > numberOfPlayers) {
-            throw new GameException(GameMessage.INVALID_PLAYER_COUNT.format(numberOfPlayers));
+            throw new GameException(GameMessage.INVALID_PLAYER_ID.format(numberOfPlayers));
         }
         return players.get(id - 1);
     }
