@@ -1,34 +1,44 @@
 import java.util.Scanner;
 
+/**
+ * Handles user interaction and command dispatching for the Mau-Mau game.
+ * Parses inputs from the console and invokes the corresponding game logic.
+ *
+ * @author udqch
+ * @version 1.0
+ */
 public class MauMauUI {
+
     /**
-     * Functional interface for executing a command after parsing arguments.
-     * This helps reduce code duplication in command handlers.
+     * Functional interface for executing a command logic.
      */
     @FunctionalInterface
     private interface CommandAction {
-        /**
-         * Executes a specific command logic.
-         *
-         * @param args The parsed arguments array.
-         * @throws ErrorException If the command execution fails.
-         */
-        void execute(String[] args) throws ErrorException;
+        void execute(String[] args) throws GameException;
     }
 
     private final MauMauGame game;
 
+    /**
+     * Creates a new UI instance linked to a specific game engine.
+     * 
+     * @param game The MauMauGame instance.
+     */
     public MauMauUI(MauMauGame game) {
         this.game = game;
     }
 
+    /**
+     * Starts the main input loop.
+     * Reads commands from standard input until the game is terminated.
+     */
     public void run() {
         try (Scanner scanner = new Scanner(System.in)) {
             while (game.isRunning() && scanner.hasNextLine()) {
-                String inputCommmand = scanner.nextLine();
+                String inputCommand = scanner.nextLine();
                 try {
-                    dispatchCommand(inputCommmand);
-                } catch (ErrorException e) {
+                    dispatchCommand(inputCommand);
+                } catch (GameException e) {
                     if (e.isError()) {
                         System.out.println("Error, " + e.getMessage());
                     } else {
@@ -39,39 +49,71 @@ public class MauMauUI {
         }
     }
 
-    public void dispatchCommand(String input) throws ErrorException {
-        String[] parts = input.split(" ", 2);
+    /**
+     * Parses the raw input string and routes it to the appropriate command handler.
+     *
+     * @param input The raw input string from the user.
+     * @throws GameException If the command is unknown or invalid.
+     */
+    public void dispatchCommand(String input) throws GameException {
+        String[] parts = input.trim().split("\\s+", 2);
         String commandName = parts[0];
         String commandArgs = (parts.length > 1) ? parts[1] : "";
 
-        if (game.endRound()) {
-            switch (commandName) {
-                case "start" -> start(commandArgs);
-                case "quit" -> quit(commandArgs);
-                default -> throw new ErrorException(GameMessage.UNKNOWN_COMMAND.format());
-            }
+        // Global commands (Always allowed)
+        if (commandName.equals("quit")) {
+            quit(commandArgs);
+            return;
+        }
+        if (commandName.equals("start")) {
+            start(commandArgs);
+            return;
+        }
 
+        // Game state restricted commands
+        if (game.endMatch()) {
+            throw new GameException(GameMessage.MATCH_ENDED.format());
         } else {
             switch (commandName) {
                 case "show" -> show(commandArgs);
                 case "discard" -> discard(commandArgs);
                 case "pick" -> pick(commandArgs);
-                case "quit" -> quit(commandArgs);
-                default -> throw new ErrorException(GameMessage.UNKNOWN_COMMAND.format());
+                default -> throw new GameException(GameMessage.UNKNOWN_COMMAND.format());
             }
         }
-
     }
 
-    private void start(String commandArgs) throws ErrorException {
-        processCommand(commandArgs, 1, args -> game.start(Integer.parseInt(args[0])));
+    // =========================================================================
+    // COMMAND HANDLERS
+    // =========================================================================
+
+    /**
+     * Handles the 'start' command.
+     * 
+     * @param commandArgs The arguments (expected: seed).
+     * @throws GameException If arguments are invalid.
+     */
+    private void start(String commandArgs) throws GameException {
+        processCommand(commandArgs, 1, args -> game.start(convertToInt(args[0])));
     }
 
-    private void quit(String commandArgs) throws ErrorException {
+    /**
+     * Handles the 'quit' command.
+     * 
+     * @param commandArgs The arguments (expected: none).
+     * @throws GameException If arguments are present.
+     */
+    private void quit(String commandArgs) throws GameException {
         processCommand(commandArgs, 0, args -> game.quit());
     }
 
-    private void show(String commandArgs) throws ErrorException {
+    /**
+     * Handles the 'show' command.
+     * 
+     * @param commandArgs The arguments (expected: player ID or "game").
+     * @throws GameException If arguments are invalid.
+     */
+    private void show(String commandArgs) throws GameException {
         processCommand(commandArgs, 1, args -> {
             if (args[0].equals("game")) {
                 game.showGame();
@@ -81,73 +123,85 @@ public class MauMauUI {
         });
     }
 
-    private void discard(String commandArgs) throws ErrorException {
+    /**
+     * Handles the 'discard' command.
+     * 
+     * @param commandArgs The arguments (expected: player ID and card name).
+     * @throws GameException If arguments are invalid.
+     */
+    private void discard(String commandArgs) throws GameException {
         processCommand(commandArgs, 2, args -> game.discard(convertToInt(args[0]), args[1]));
     }
 
-    private void pick(String commandArgs) throws ErrorException {
+    /**
+     * Handles the 'pick' command.
+     * 
+     * @param commandArgs The arguments (expected: player ID).
+     * @throws GameException If arguments are invalid.
+     */
+    private void pick(String commandArgs) throws GameException {
         processCommand(commandArgs, 1, args -> game.pick(convertToInt(args[0])));
     }
 
-    private int convertToInt(String input) throws ErrorException {
+    // =========================================================================
+    // HELPERS
+    // =========================================================================
+
+    /**
+     * Converts a string input to an integer with validation.
+     *
+     * @param input The string to convert.
+     * @return The integer value.
+     * @throws GameException If the input is not a valid integer.
+     */
+    private int convertToInt(String input) throws GameException {
         if (!input.matches("\\d+")) {
-            throw new ErrorException(GameMessage.REQUIRE_INTEGER.format());
+            throw new GameException(GameMessage.REQUIRE_NUMBER.format());
         }
         try {
             return Integer.parseInt(input);
         } catch (NumberFormatException e) {
-            throw new ErrorException(GameMessage.REQUIRE_INTEGER.format());
+            throw new GameException(GameMessage.TOO_LARGE_NUMBER.format());
         }
     }
 
     /**
-     * Helper to parse arguments and execute an action.
+     * Orchestrates argument parsing and command execution using a lambda action.
      *
-     * @param commandArgs  The string containing parameters separated by semicolons.
-     * @param expectedArgs The expected number of parameters.
-     * @param action       The lambda function containing the logic to execute.
-     * @throws ErrorException If argument parsing or execution fails.
+     * @param commandArgs  The raw argument string.
+     * @param expectedArgs The number of expected arguments.
+     * @param action       The logic to execute if parsing succeeds.
+     * @throws GameException If parsing fails or execution errors occur.
      */
-    private void processCommand(String commandArgs, int expectedArgs, CommandAction action) throws ErrorException {
+    private void processCommand(String commandArgs, int expectedArgs, CommandAction action) throws GameException {
         String[] args = parseArguments(commandArgs, expectedArgs);
         action.execute(args);
     }
 
     /**
-     * Parses the parameter string into an array, checking for validity.
+     * Splits and validates the command arguments.
      *
-     * @param commandArgs   Raw parameter string (e.g., "Arg1; Arg2").
-     * @param expectedCount How many arguments are expected.
-     * @return An array of trimmed argument strings.
-     * @throws ErrorException If format is invalid or count is wrong.
+     * @param commandArgs   The raw argument string.
+     * @param expectedCount The exact number of arguments required.
+     * @return An array of cleaned arguments.
+     * @throws GameException If the argument count does not match.
      */
-    private String[] parseArguments(String commandArgs, int expectedCount) throws ErrorException {
-        // Case: No arguments expected (e.g., logout, quit)
+    private String[] parseArguments(String commandArgs, int expectedCount) throws GameException {
         if (expectedCount == 0) {
             if (!commandArgs.isEmpty()) {
-                throw new ErrorException("this command accepts no parameters.");
-            } else {
-                return new String[0];
+                throw new GameException(GameMessage.NO_PARAMETER.format());
             }
+            return new String[0];
         }
 
-        // Case: Arguments expected but input is empty
         if (commandArgs.isEmpty()) {
-            throw new ErrorException("invalid number of arguments. Expected " + expectedCount + " but got 0");
+            throw new GameException(GameMessage.INVALID_ARGUMENT_COUNT.format(expectedCount, 0));
         }
 
-        // Logic: Split by semicolon, preserve empty strings (limit = -1) to detect
-        // errors like "a;;"
         String[] args = commandArgs.trim().split("\\s+");
 
-        // Logic: Trim whitespace around parameters (e.g., " Max " -> "Max")
-        for (int i = 0; i < args.length; i++) {
-            args[i] = args[i].trim();
-        }
-
         if (args.length != expectedCount) {
-            throw new ErrorException(
-                    "invalid number of arguments. Expected " + expectedCount + " but got " + args.length);
+            throw new GameException(GameMessage.INVALID_ARGUMENT_COUNT.format(expectedCount, args.length));
         }
         return args;
     }

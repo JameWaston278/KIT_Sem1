@@ -1,21 +1,24 @@
 public enum GameMessage {
 
     UNKNOWN_COMMAND("unknown command."),
-    REQUIRE_INTEGER("This function requires a numeric parameter."),
-    TOO_LARGE_NUMBER("Your input number is too large."),
+    REQUIRE_NUMBER("this function requires a numeric parameter."),
+    TOO_LARGE_NUMBER("your input number is too large."),
+    NO_PARAMETER("this command accepts no parameters."),
+    INVALID_ARGUMENT_COUNT("invalid number of arguments. Expected %d but got %d."),
 
     // --- System / Status error ---
-    GAME_ENDED("Game has ended and cannot be restarted."),
-    INVALID_PLAYER_COUNT("Invalid player ID. Expected 1-%d."),
+    GAME_ENDED("game has ended and cannot be restarted."),
+    MATCH_ENDED("match has ended, only \"start\" and \"quit\" commands allow."),
+    INVALID_PLAYER_COUNT("invalid player ID, expected 1-%d."),
     SHOW_GAME("%s / %d"),
-    SHOW("%s"),
+    SHOW_PLAYER_DECK("%s"),
 
     // --- Game turn error ---
-    WRONG_TURN("It is not player %d's turn."),
+    WRONG_TURN("it is not player %d's turn."),
 
     // --- Processing card error ---
-    CARD_NOT_FOUND("Player %d does not have card %s."),
-    INVALID_MOVE("Card %s cannot be played on %s."),
+    CARD_NOT_FOUND("player %d does not have card %s."),
+    INVALID_MOVE("card %s cannot be played on %s."),
 
     // --- End game notification ---
     GAME_WON("Game over: Player %d has won."),

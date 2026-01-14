@@ -1,4 +1,4 @@
-public class ErrorException extends Exception {
+public class GameException extends Exception {
     private final boolean isError;
 
     /**
@@ -6,14 +6,14 @@ public class ErrorException extends Exception {
      * 
      * @param message The error message to be displayed to the user.
      */
-    public ErrorException(String message) {
+    public GameException(String message) {
         super(message);
         this.isError = true;
     }
 
-    public ErrorException(String message, boolean isError) {
+    public GameException(String message, boolean isError) {
         super(message);
-        this.isError = false;
+        this.isError = isError;
     }
 
     public boolean isError() {
