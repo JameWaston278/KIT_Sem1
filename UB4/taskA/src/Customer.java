@@ -63,11 +63,11 @@ public class Customer extends User {
     /**
      * Removes and returns the oldest mail from the mailbox (FIFO strategy).
      *
-     * @throws ErrorException If the mailbox is already empty.
+     * @throws SystemException If the mailbox is already empty.
      */
-    public void removeOldestMail() throws ErrorException {
+    public void removeOldestMail() throws SystemException {
         if (isMailBoxEmpty()) {
-            throw new ErrorException("mailbox is empty.");
+            throw new SystemException(SystemMessage.MAILBOX_EMPTY.format());
         }
         this.mailBox.remove(0);
     }

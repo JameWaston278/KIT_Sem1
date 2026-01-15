@@ -63,31 +63,29 @@ public class PostOffice {
      * @param userName  The unique username for login (4-9 chars).
      * @param password  The login password (4-9 chars).
      * @param idCard    The 9-digit ID card number.
-     * @throws ErrorException If validation fails or the user already exists.
+     * @throws SystemException If validation fails or the user already exists.
      */
     public void addCustomer(String firstName, String lastName, String userName, String password, String idCard)
-            throws ErrorException {
+            throws SystemException {
         // 1. Validate basic info (shared logic for all users)
         validateBasicInfo(firstName, lastName, password);
 
         // 2. Validate specific customer format
-        validateFormat(userName, "[a-zA-Z0-9]{4,9}",
-                "username must be 4-9 alphanumeric characters.");
+        validateFormat(userName, "[a-zA-Z0-9]{4,9}", SystemMessage.INVALID_USERNAME_FORMAT);
         if (userName.matches("[0-9]+")) {
-            throw new ErrorException("username cannot be purely numeric.");
+            throw new SystemException(SystemMessage.USERNAME_NUMERIC_ONLY.format());
         }
-        validateFormat(idCard, "[0-9]{9}",
-                "id card number must be exactly 9 digits.");
+        validateFormat(idCard, "[0-9]{9}", SystemMessage.INVALID_ID_CARD_FORMAT);
 
         // 3. Check uniqueness
         if (registeredUsers.containsKey(userName)) {
-            throw new ErrorException("customer with this username already exists.");
+            throw new SystemException(SystemMessage.USER_EXISTS.format());
         }
 
         for (User u : registeredUsers.values()) {
             if (u instanceof Customer existingCustomer) {
                 if (existingCustomer.getIdCard().equals(idCard)) {
-                    throw new ErrorException("customer with this ID card number already exists.");
+                    throw new SystemException(SystemMessage.ID_CARD_EXISTS.format());
                 }
             }
         }
@@ -104,10 +102,10 @@ public class PostOffice {
      * @param lastName    The last name.
      * @param personnelId The unique personnel number (numeric).
      * @param password    The login password.
-     * @throws ErrorException If validation fails or ID is occupied.
+     * @throws SystemException If validation fails or ID is occupied.
      */
     public void addMailman(String firstName, String lastName, String personnelId, String password)
-            throws ErrorException {
+            throws SystemException {
         addEmployee(firstName, lastName, personnelId, password,
                 (fn, ln, id, pw) -> new Mailman(fn, ln, id, pw));
     }
@@ -119,10 +117,10 @@ public class PostOffice {
      * @param lastName    The last name.
      * @param personnelId The unique personnel number (numeric).
      * @param password    The login password.
-     * @throws ErrorException If validation fails or ID is occupied.
+     * @throws SystemException If validation fails or ID is occupied.
      */
     public void addAgent(String firstName, String lastName, String personnelId, String password)
-            throws ErrorException {
+            throws SystemException {
         addEmployee(firstName, lastName, personnelId, password,
                 (fn, ln, id, pw) -> new Agent(fn, ln, id, pw));
     }
@@ -133,26 +131,24 @@ public class PostOffice {
      * @param userName The username of the customer.
      * @param idCard   The ID card number for verification.
      * @param password The new password.
-     * @throws ErrorException If the current user is not an Agent, or verification
-     *                        fails.
+     * @throws SystemException If the current user is not an Agent, or verification
+     *                         fails.
      */
-    public void resetPin(String userName, String idCard, String password) throws ErrorException {
+    public void resetPin(String userName, String idCard, String password) throws SystemException {
         if (!(currentUser instanceof Agent)) {
-            throw new ErrorException(
-                    "unauthorized access, only agents can reset PINs.");
+            throw new SystemException(SystemMessage.UNAUTHORIZED_RESET.format());
         }
 
         if (!registeredUsers.containsKey(userName) || !(registeredUsers.get(userName) instanceof Customer)) {
-            throw new ErrorException("customer with this username does not exist.");
+            throw new SystemException(SystemMessage.USER_NOT_FOUND.format(userName));
         }
         Customer customer = (Customer) registeredUsers.get(userName);
 
         if (!customer.getIdCard().equals(idCard)) {
-            throw new ErrorException("ID card number does not match.");
+            throw new SystemException(SystemMessage.ID_CARD_MISMATCH.format());
         }
 
-        validateFormat(password, "[a-zA-Z0-9]{4,9}",
-                "incorrect format, password must be between 4 and 9 characters and contain no invalid characters.");
+        validateFormat(password, "[a-zA-Z0-9]{4,9}", SystemMessage.INVALID_RESET_PASSWORD_FORMAT);
 
         customer.setPassword(password);
     }
@@ -164,21 +160,20 @@ public class PostOffice {
      *
      * @param userName The username or personnel number.
      * @param password The password.
-     * @throws ErrorException If a user is already logged in or credentials are
-     *                        invalid.
+     * @throws SystemException If a user is already logged in or credentials are
+     *                         invalid.
      */
-    public void authenticate(String userName, String password) throws ErrorException {
+    public void authenticate(String userName, String password) throws SystemException {
         if (this.currentUser != null) {
-            throw new ErrorException(
-                    "user already logged in.");
+            throw new SystemException(SystemMessage.USER_ALREADY_LOGGED_IN.format());
         }
 
         User foundUser = registeredUsers.get(userName);
         if (foundUser == null) {
-            throw new ErrorException("this user \"" + userName + "\" does not exist.");
+            throw new SystemException(SystemMessage.USER_NOT_FOUND.format(userName));
         }
         if (!foundUser.checkPassword(password)) {
-            throw new ErrorException("incorrect password \"" + password + "\" for user \"" + userName + "\".");
+            throw new SystemException(SystemMessage.INCORRECT_PASSWORD.format(password, userName));
         }
 
         this.currentUser = foundUser;
@@ -187,11 +182,11 @@ public class PostOffice {
     /**
      * Logs out the current user.
      *
-     * @throws ErrorException If no user is currently logged in.
+     * @throws SystemException If no user is currently logged in.
      */
-    public void logout() throws ErrorException {
+    public void logout() throws SystemException {
         if (this.currentUser == null) {
-            throw new ErrorException("no user is authenticated.");
+            throw new SystemException(SystemMessage.NO_USER_LOGGED_IN.format());
         }
         this.currentUser = null;
     }
@@ -213,27 +208,27 @@ public class PostOffice {
      * @param mailType         The type of mail (e.g., Brief, PaketS).
      * @param receiverUsername The username of the recipient.
      * @param senderUsername   The username of the sender.
-     * @throws ErrorException If validation fails (e.g., invalid registeredUsers,
-     *                        unknown mail
-     *                        type).
+     * @throws SystemException If validation fails (e.g., invalid registeredUsers,
+     *                         unknown mail
+     *                         type).
      */
-    public void sendMail(String mailType, String receiverUsername, String senderUsername) throws ErrorException {
+    public void sendMail(String mailType, String receiverUsername, String senderUsername) throws SystemException {
         MailType type = MailType.fromString(mailType);
         if (type == null) {
-            throw new ErrorException("unknown mail type.");
+            throw new SystemException(SystemMessage.UNKNOWN_MAIL_TYPE.format());
         }
 
         // Validate Receiver
         if (!registeredUsers.containsKey(receiverUsername)
                 || !(registeredUsers.get(receiverUsername) instanceof Customer)) {
-            throw new ErrorException("receiver is not a registered customer.");
+            throw new SystemException(SystemMessage.RECEIVER_NOT_CUSTOMER.format());
         }
         Customer receiver = (Customer) registeredUsers.get(receiverUsername);
 
         // Validate Sender
         if (!registeredUsers.containsKey(senderUsername)
                 || !(registeredUsers.get(senderUsername) instanceof Customer)) {
-            throw new ErrorException("sender is not a registered customer.");
+            throw new SystemException(SystemMessage.SENDER_NOT_CUSTOMER.format());
         }
         Customer sender = (Customer) registeredUsers.get(senderUsername);
 
@@ -245,17 +240,17 @@ public class PostOffice {
      * Retrieves (fetches) the oldest mail from a customer's mailbox.
      *
      * @param customerUsername The username of the customer.
-     * @throws ErrorException If the mailbox is empty or user is invalid.
+     * @throws SystemException If the mailbox is empty or user is invalid.
      */
-    public void getMail(String customerUsername) throws ErrorException {
+    public void getMail(String customerUsername) throws SystemException {
         if (!registeredUsers.containsKey(customerUsername)
                 || !(registeredUsers.get(customerUsername) instanceof Customer)) {
-            throw new ErrorException("receiver is not a registered customer.");
+            throw new SystemException(SystemMessage.RECEIVER_NOT_CUSTOMER.format());
         }
         Customer customer = (Customer) registeredUsers.get(customerUsername);
 
         if (customer.isMailBoxEmpty()) {
-            throw new ErrorException("mailbox is empty.");
+            throw new SystemException(SystemMessage.MAILBOX_EMPTY.format());
         }
         customer.removeOldestMail();
     }
@@ -267,18 +262,17 @@ public class PostOffice {
      * Output format: "MailType; Count"
      *
      * @param customerUsername The username of the customer.
-     * @throws ErrorException If user is invalid.
+     * @throws SystemException If user is invalid.
      */
-    public void listMail(String customerUsername) throws ErrorException {
+    public void listMail(String customerUsername) throws SystemException {
         if (!registeredUsers.containsKey(customerUsername)
                 || !(registeredUsers.get(customerUsername) instanceof Customer)) {
-            throw new ErrorException("receiver is not a registered customer.");
+            throw new SystemException(SystemMessage.RECEIVER_NOT_CUSTOMER.format());
         }
         Customer customer = (Customer) registeredUsers.get(customerUsername);
 
         if (customer.isMailBoxEmpty()) {
-            System.out.println("OK");
-            return;
+            System.out.println(SystemMessage.OK);
         }
 
         Map<MailType, Integer> counts = new HashMap<>();
@@ -299,20 +293,19 @@ public class PostOffice {
      * Output format: "MailType; Count; TotalPrice"
      *
      * @param customerUsername The username of the customer.
-     * @throws ErrorException If user is invalid.
+     * @throws SystemException If user is invalid.
      */
-    public void listPrice(String customerUsername) throws ErrorException {
+    public void listPrice(String customerUsername) throws SystemException {
         if (!registeredUsers.containsKey(customerUsername)
                 || !(registeredUsers.get(customerUsername) instanceof Customer)) {
-            throw new ErrorException("receiver is not a registered customer.");
+            throw new SystemException(SystemMessage.RECEIVER_NOT_CUSTOMER.format());
         }
         Customer customer = (Customer) registeredUsers.get(customerUsername);
 
         Map<MailType, Integer> history = customer.getMailHistory();
 
         if (history.isEmpty()) {
-            System.out.println("OK");
-            return;
+            System.out.println(SystemMessage.OK);
         }
 
         List<MailType> sortedTypes = getSortedMailTypes(history.keySet());
@@ -335,31 +328,31 @@ public class PostOffice {
      * @param personnelId The personnel number as a string.
      * @param password    The login password.
      * @param factory     The factory to create the specific Employee instance.
-     * @throws ErrorException If basic validation fails or ID is taken.
+     * @throws SystemException If basic validation fails or ID is taken.
      */
     private void addEmployee(String firstName, String lastName, String personnelId, String password,
-            EmployeeFactory factory) throws ErrorException {
+            EmployeeFactory factory) throws SystemException {
         validateBasicInfo(firstName, lastName, password);
-        validateFormat(personnelId, "[0-9]+", "personnel number must be numeric.");
+        validateFormat(personnelId, "[0-9]+", SystemMessage.INVALID_PERSONNEL_ID_FORMAT);
 
         if (registeredUsers.containsKey(personnelId)) {
             User existingEmployee = registeredUsers.get(personnelId);
             if (existingEmployee instanceof Employee) {
-                throw new ErrorException("employee with this personnel number already exists.");
+                throw new SystemException(SystemMessage.EMPLOYEE_EXISTS.format());
             } else {
-                throw new ErrorException("the identifier " + personnelId + " is occupied.");
+                throw new SystemException(SystemMessage.ID_OCCUPIED.format(personnelId));
             }
         }
 
         try {
             int personnelID = Integer.parseInt(personnelId);
             if (personnelID <= 0) {
-                throw new ErrorException("personnel number must be a positive number.");
+                throw new SystemException(SystemMessage.PERSONNEL_ID_NOT_POSITIVE.format());
             }
             Employee newEmployee = factory.create(firstName, lastName, personnelID, password);
             registeredUsers.put(personnelId, newEmployee);
         } catch (NumberFormatException e) {
-            throw new ErrorException("personnel number is too large.");
+            throw new SystemException(SystemMessage.PERSONNEL_ID_TOO_LARGE.format());
         }
     }
 
@@ -369,16 +362,15 @@ public class PostOffice {
      * @param firstName The first name to validate.
      * @param lastName  The last name to validate.
      * @param password  The password to validate.
-     * @throws ErrorException If a user is logged in or validation fails.
+     * @throws SystemException If a user is logged in or validation fails.
      */
-    private void validateBasicInfo(String firstName, String lastName, String password) throws ErrorException {
+    private void validateBasicInfo(String firstName, String lastName, String password) throws SystemException {
         if (this.currentUser != null) {
-            throw new ErrorException("user already logged in.");
+            throw new SystemException(SystemMessage.USER_ALREADY_LOGGED_IN.format());
         }
-        validateFormat(firstName, "[^;\\n\\r]+", "first name contains invalid characters.");
-        validateFormat(lastName, "[^;\\n\\r]+", "last name contains invalid characters.");
-        validateFormat(password, "[a-zA-Z0-9]{4,9}",
-                "password must be 4-9 alphanumeric characters.");
+        validateFormat(firstName, "[^;\\n\\r]+", SystemMessage.INVALID_FIRST_NAME);
+        validateFormat(lastName, "[^;\\n\\r]+", SystemMessage.INVALID_LAST_NAME);
+        validateFormat(password, "[a-zA-Z0-9]{4,9}", SystemMessage.INVALID_PASSWORD_FORMAT);
     }
 
     /**
@@ -387,11 +379,11 @@ public class PostOffice {
      * @param input        The input string to check.
      * @param regex        The regular expression pattern.
      * @param errorMessage The message to throw if validation fails.
-     * @throws ErrorException If input is null or does not match regex.
+     * @throws SystemException If input is null or does not match regex.
      */
-    private void validateFormat(String input, String regex, String errorMessage) throws ErrorException {
+    private void validateFormat(String input, String regex, SystemMessage message) throws SystemException {
         if (input == null || !input.matches(regex)) {
-            throw new ErrorException(errorMessage);
+            throw new SystemException(message.toString());
         }
     }
 

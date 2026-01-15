@@ -16,9 +16,9 @@ public class PostOfficeUI {
          * Executes a specific command logic.
          *
          * @param args The parsed arguments array.
-         * @throws ErrorException If the command execution fails.
+         * @throws SystemException If the command execution fails.
          */
-        void execute(String[] args) throws ErrorException;
+        void execute(String[] args) throws SystemException;
     }
 
     // --- FIELDS ---
@@ -49,8 +49,8 @@ public class PostOfficeUI {
                 String inputCommand = scanner.nextLine();
                 try {
                     dispatchCommand(inputCommand);
-                } catch (ErrorException e) {
-                    System.out.println("Error, " + e.getMessage());
+                } catch (SystemException e) {
+                    System.out.println(SystemMessage.ERROR_PREFIX + e.getMessage());
                 }
             }
         }
@@ -62,9 +62,9 @@ public class PostOfficeUI {
      * Parses the raw input string and dispatches it to the appropriate handler.
      *
      * @param input The full line of text entered by the user.
-     * @throws ErrorException If the command is unknown or invalid.
+     * @throws SystemException If the command is unknown or invalid.
      */
-    public void dispatchCommand(String input) throws ErrorException {
+    public void dispatchCommand(String input) throws SystemException {
         String[] parts = input.split(" ", 2);
         String commandName = parts[0];
         String commandArgs = (parts.length > 1) ? parts[1] : "";
@@ -84,7 +84,7 @@ public class PostOfficeUI {
                 parseArguments(commandArgs, 0);
                 this.isRunning = false;
             }
-            default -> throw new ErrorException("unknown command.");
+            default -> throw new SystemException(SystemMessage.UNKNOWN_COMMAND.format());
         }
     }
 
@@ -95,12 +95,12 @@ public class PostOfficeUI {
      * Expected params: FirstName;LastName;Username;Password;IDCard
      *
      * @param commandArgs The raw parameter string.
-     * @throws ErrorException If arguments are invalid.
+     * @throws SystemException If arguments are invalid.
      */
-    private void addCustomer(String commandArgs) throws ErrorException {
+    private void addCustomer(String commandArgs) throws SystemException {
         processCommand(commandArgs, 5,
                 args -> postOffice.addCustomer(args[0], args[1], args[2], args[3], args[4]));
-        System.out.println("OK");
+        System.out.println(SystemMessage.OK);
     }
 
     /**
@@ -108,12 +108,12 @@ public class PostOfficeUI {
      * Expected params: FirstName;LastName;personnelId;Password
      *
      * @param commandArgs The raw parameter string.
-     * @throws ErrorException If arguments are invalid.
+     * @throws SystemException If arguments are invalid.
      */
-    private void addMailman(String commandArgs) throws ErrorException {
+    private void addMailman(String commandArgs) throws SystemException {
         processCommand(commandArgs, 4,
                 args -> postOffice.addMailman(args[0], args[1], args[2], args[3]));
-        System.out.println("OK");
+        System.out.println(SystemMessage.OK);
     }
 
     /**
@@ -121,12 +121,12 @@ public class PostOfficeUI {
      * Expected params: FirstName;LastName;personnelId;Password
      *
      * @param commandArgs The raw parameter string.
-     * @throws ErrorException If arguments are invalid.
+     * @throws SystemException If arguments are invalid.
      */
-    private void addAgent(String commandArgs) throws ErrorException {
+    private void addAgent(String commandArgs) throws SystemException {
         processCommand(commandArgs, 4,
                 args -> postOffice.addAgent(args[0], args[1], args[2], args[3]));
-        System.out.println("OK");
+        System.out.println(SystemMessage.OK);
     }
 
     /**
@@ -134,12 +134,12 @@ public class PostOfficeUI {
      * Expected params: Username;Password
      *
      * @param commandArgs The raw parameter string.
-     * @throws ErrorException If login fails.
+     * @throws SystemException If login fails.
      */
-    private void authenticate(String commandArgs) throws ErrorException {
+    private void authenticate(String commandArgs) throws SystemException {
         processCommand(commandArgs, 2,
                 args -> postOffice.authenticate(args[0], args[1]));
-        System.out.println("OK");
+        System.out.println(SystemMessage.OK);
     }
 
     /**
@@ -147,12 +147,12 @@ public class PostOfficeUI {
      * Expected params: None.
      *
      * @param commandArgs The raw parameter string (should be empty).
-     * @throws ErrorException If logout fails or params exist.
+     * @throws SystemException If logout fails or params exist.
      */
-    private void logout(String commandArgs) throws ErrorException {
+    private void logout(String commandArgs) throws SystemException {
         processCommand(commandArgs, 0,
                 args -> postOffice.logout());
-        System.out.println("OK");
+        System.out.println(SystemMessage.OK);
     }
 
     /**
@@ -160,12 +160,12 @@ public class PostOfficeUI {
      * Expected params: TargetUser;IDCard;NewPassword
      *
      * @param commandArgs The raw parameter string.
-     * @throws ErrorException If reset fails.
+     * @throws SystemException If reset fails.
      */
-    private void resetPin(String commandArgs) throws ErrorException {
+    private void resetPin(String commandArgs) throws SystemException {
         processCommand(commandArgs, 3,
                 args -> postOffice.resetPin(args[0], args[1], args[2]));
-        System.out.println("OK");
+        System.out.println(SystemMessage.OK);
     }
 
     /**
@@ -174,9 +174,9 @@ public class PostOfficeUI {
      * args).
      *
      * @param commandArgs The raw parameter string.
-     * @throws ErrorException If role is unauthorized or params invalid.
+     * @throws SystemException If role is unauthorized or params invalid.
      */
-    private void sendMail(String commandArgs) throws ErrorException {
+    private void sendMail(String commandArgs) throws SystemException {
         User currentUser = postOffice.getCurrentUser();
         if (currentUser instanceof Customer) {
             processCommand(commandArgs, 2,
@@ -185,9 +185,9 @@ public class PostOfficeUI {
             processCommand(commandArgs, 3,
                     args -> postOffice.sendMail(args[0], args[1], args[2]));
         } else {
-            throw new ErrorException("unauthorized role.");
+            throw new SystemException(SystemMessage.UNAUTHORIZED_ROLE.format());
         }
-        System.out.println("OK");
+        System.out.println(SystemMessage.OK);
     }
 
     /**
@@ -196,9 +196,9 @@ public class PostOfficeUI {
      * arg).
      *
      * @param commandArgs The raw parameter string.
-     * @throws ErrorException If role is unauthorized or params invalid.
+     * @throws SystemException If role is unauthorized or params invalid.
      */
-    private void getMail(String commandArgs) throws ErrorException {
+    private void getMail(String commandArgs) throws SystemException {
         User currentUser = postOffice.getCurrentUser();
         if (currentUser instanceof Customer) {
             processCommand(commandArgs, 0,
@@ -207,25 +207,25 @@ public class PostOfficeUI {
             processCommand(commandArgs, 1,
                     args -> postOffice.getMail(args[0]));
         } else {
-            throw new ErrorException("unauthorized role.");
+            throw new SystemException(SystemMessage.UNAUTHORIZED_ROLE.format());
         }
-        System.out.println("OK");
+        System.out.println(SystemMessage.OK);
     }
 
     /**
      * Handles listing mail content. Does NOT print "OK" because it prints a list.
      *
      * @param commandArgs The raw parameter string.
-     * @throws ErrorException If role is unauthorized.
+     * @throws SystemException If role is unauthorized.
      */
-    private void listMail(String commandArgs) throws ErrorException {
+    private void listMail(String commandArgs) throws SystemException {
         User currentUser = postOffice.getCurrentUser();
         if (currentUser instanceof Customer) {
             processCommand(commandArgs, 0, args -> postOffice.listMail(currentUser.getID()));
         } else if (currentUser instanceof Employee) {
             processCommand(commandArgs, 1, args -> postOffice.listMail(args[0]));
         } else {
-            throw new ErrorException("unauthorized role.");
+            throw new SystemException(SystemMessage.UNAUTHORIZED_ROLE.format());
         }
     }
 
@@ -233,16 +233,16 @@ public class PostOfficeUI {
      * Handles listing mail price history. Does NOT print "OK".
      *
      * @param commandArgs The raw parameter string.
-     * @throws ErrorException If role is unauthorized.
+     * @throws SystemException If role is unauthorized.
      */
-    private void listPrice(String commandArgs) throws ErrorException {
+    private void listPrice(String commandArgs) throws SystemException {
         User currentUser = postOffice.getCurrentUser();
         if (currentUser instanceof Customer) {
             processCommand(commandArgs, 0, args -> postOffice.listPrice(currentUser.getID()));
         } else if (currentUser instanceof Employee) {
             processCommand(commandArgs, 1, args -> postOffice.listPrice(args[0]));
         } else {
-            throw new ErrorException("unauthorized role.");
+            throw new SystemException(SystemMessage.UNAUTHORIZED_ROLE.format());
         }
     }
 
@@ -254,9 +254,9 @@ public class PostOfficeUI {
      * @param commandArgs  The string containing parameters separated by semicolons.
      * @param expectedArgs The expected number of parameters.
      * @param action       The lambda function containing the logic to execute.
-     * @throws ErrorException If argument parsing or execution fails.
+     * @throws SystemException If argument parsing or execution fails.
      */
-    private void processCommand(String commandArgs, int expectedArgs, CommandAction action) throws ErrorException {
+    private void processCommand(String commandArgs, int expectedArgs, CommandAction action) throws SystemException {
         String[] args = parseArguments(commandArgs, expectedArgs);
         action.execute(args);
     }
@@ -267,13 +267,13 @@ public class PostOfficeUI {
      * @param commandArgs   Raw parameter string (e.g., "Arg1; Arg2").
      * @param expectedCount How many arguments are expected.
      * @return An array of trimmed argument strings.
-     * @throws ErrorException If format is invalid or count is wrong.
+     * @throws SystemException If format is invalid or count is wrong.
      */
-    private String[] parseArguments(String commandArgs, int expectedCount) throws ErrorException {
+    private String[] parseArguments(String commandArgs, int expectedCount) throws SystemException {
         // Case: No arguments expected (e.g., logout, quit)
         if (expectedCount == 0) {
             if (!commandArgs.isEmpty()) {
-                throw new ErrorException("this command accepts no parameters.");
+                throw new SystemException(SystemMessage.NO_PARAMS.format());
             } else {
                 return new String[0];
             }
@@ -281,7 +281,7 @@ public class PostOfficeUI {
 
         // Case: Arguments expected but input is empty
         if (commandArgs.isEmpty()) {
-            throw new ErrorException("invalid number of arguments. Expected " + expectedCount + " but got 0");
+            throw new SystemException(SystemMessage.ARG_COUNT_MISMATCH.format(expectedCount, 0));
         }
 
         // Logic: Split by semicolon, preserve empty strings (limit = -1) to detect
@@ -294,8 +294,7 @@ public class PostOfficeUI {
         }
 
         if (args.length != expectedCount) {
-            throw new ErrorException(
-                    "invalid number of arguments. Expected " + expectedCount + " but got " + args.length);
+            throw new SystemException(SystemMessage.ARG_COUNT_MISMATCH.format(expectedCount, args.length));
         }
         return args;
     }
