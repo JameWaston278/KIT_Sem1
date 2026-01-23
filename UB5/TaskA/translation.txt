@@ -1,0 +1,211 @@
+Chào bạn, dựa trên file `assignment.pdf` bạn cung cấp, đây là bản dịch chi tiết và giải thích nội dung của **Bài tập 5 (Übungsblatt 5)** môn Lập trình tại KIT.
+
+Bài tập này yêu cầu bạn xây dựng một ứng dụng quản lý công việc (TODO Application) tên là **"Procrastinot"**.
+
+---
+
+# TỔNG QUAN BÀI TẬP 5 - LẬP TRÌNH (WS 2025/26)
+
+* **Hạn nộp:** 29.01.2026, lúc 06:00 sáng.
+* **Điểm số:** 20 điểm.
+* **Cảnh báo Đạo văn:** Bài làm phải tự làm. Copy từ bạn bè, Internet, hoặc dùng AI (như ChatGPT) tạo code mà không tuân thủ quy định sẽ bị tính là gian lận (0 điểm). Code tham khảo từ slide bài giảng thì được phép nhưng phải trích dẫn.
+
+---
+
+## HƯỚNG DẪN LÀM BÀI (Quan trọng)
+
+1. **Môi trường:** Chỉ sử dụng **Java SE 21**.
+2. **Thư viện cấm:** Không dùng thư viện ngoài, ngoại trừ:
+* `java.util.Scanner`
+* Các class trong: `java.lang`, `java.io`, `java.util`, `java.util.regex`, `java.util.stream`, `java.util.function`, `java.time`, `java.time.format`.
+
+
+3. **Quy tắc Code:**
+* Độ dài dòng tối đa: **140 ký tự**.
+* Code phải biên dịch không lỗi.
+* Không dùng `System.exit()` hoặc `Runtime.exit()`.
+* Không dùng `default-package` (phải đóng gói code trong package, ví dụ `edu.kit...`).
+* Tuân thủ quy tắc đặt tên biến/hàm và Javadoc.
+* Tuân thủ **Checkstyle** (nếu vi phạm các lỗi nghiêm trọng sẽ bị 0 điểm).
+
+
+4. **Ngôn ngữ:** Code và Comment (bình luận) phải viết bằng **tiếng Anh**. (Comment có thể bằng tiếng Đức hoặc Anh nhưng phải thống nhất).
+5. **Thông tin cá nhân:** Chỉ ghi **u-kürzel** (mã sinh viên) vào thẻ `@author` trong Javadoc, không ghi tên thật hay dữ liệu cá nhân khác.
+
+---
+
+## NHIỆM VỤ A: PROCRASTINOT (Ứng dụng TODO)
+
+Bạn cần viết một ứng dụng quản lý công việc (Task) với các tính năng: tạo, sửa, ưu tiên, theo dõi tiến độ, tạo công việc con (subtasks), v.v.
+
+### A.1 Các Khái niệm (Concepts)
+
+1. Công việc (Aufgaben - Tasks) 
+
+* Là thành phần chính. Ban đầu ở trạng thái "Mở" (Open), có thể đánh dấu là "Đã xong" (Closed).
+* Có thể bị xóa (Deleted) và khôi phục (Restored).
+* **Cấu trúc cây:** Một công việc có thể chứa các **công việc con** (subtasks). Công việc con cũng có thể có công việc con của nó.
+* Mỗi công việc có:
+* Một **ID** duy nhất (số nguyên tự tăng từ 1).
+* Một **Tên** (có thể trùng nhau).
+* (Tùy chọn) Một **Hạn chót** (Deadline).
+* (Tùy chọn) Một **Độ ưu tiên** (Priority).
+* (Tùy chọn) Nhiều **Thẻ/Nhãn** (Tags).
+
+
+* **Công việc gốc (Parent/Root task):** Là công việc không nằm trong công việc nào khác.
+
+**Định dạng hiển thị:**
+
+* Công việc hiển thị theo dòng.
+* Nếu đã xong: đánh dấu `[x]`. Nếu chưa xong: `[ ]`.
+* Hiển thị theo cấu trúc phân cấp: Công việc con lùi vào **2 khoảng trắng** so với cha nó.
+* **Thứ tự sắp xếp:**
+1. Độ ưu tiên giảm dần (HI > MD > LO > Không có).
+2. Thứ tự thêm vào (ID).
+3. Quy tắc này áp dụng cho cả công việc cha và các công việc con bên trong nó.
+
+
+
+2. Danh sách (Listen - Lists) 
+
+* Dùng để gom nhóm các công việc.
+* Có tên duy nhất.
+* Ban đầu rỗng, người dùng phải thêm công việc vào.
+* Một danh sách cũng có thể được gắn Thẻ (Tags).
+
+3. Độ ưu tiên (Priorität) 
+
+* 3 cấp độ: Cao (**HI**), Trung bình (**MD**), Thấp (**LO**).
+
+4. Thẻ/Nhãn (Schlagworte - Tags) 
+
+* Là các từ khóa để phân loại công việc.
+
+5. Hạn chót (Fristen - Deadlines) 
+
+* Ngày phải hoàn thành (định dạng `YYYY-MM-DD`).
+
+---
+
+### A.3 Các Lệnh (Commands)
+
+Chương trình chạy trong Console, nhận lệnh từ bàn phím đến khi nhập `quit`.
+**Lưu ý:** Nếu lệnh sai format hoặc lỗi logic, phải in ra thông báo bắt đầu bằng `ERROR: `.
+
+1. `add <name> [priority] [date]` 
+
+* Thêm một công việc gốc mới.
+* `priority` và `date` là tùy chọn.
+* Xuất ra: `added <id>: <name>`
+
+2. `add-list <list>` 
+
+* Thêm một danh sách mới (ban đầu rỗng).
+* Xuất ra: `added <list>`
+
+3. `tag <id> <tag>` (Cho công việc) 
+
+* Gán thẻ cho công việc có ID tương ứng.
+* Lỗi nếu công việc đã có thẻ này rồi.
+* Xuất ra: `tagged <name> with <tag>`
+
+4. `tag <list> <tag>` (Cho danh sách) 
+
+* Gán thẻ cho một danh sách.
+* Xuất ra: `tagged <list> with <tag>`
+
+5. `assign <id1> <id2>` (Gán công việc con) 
+
+* Gán công việc `<id1>` làm con của công việc `<id2>`.
+* Nếu `<id1>` đang là con của ai đó, nó sẽ bị chuyển sang cha mới `<id2>`.
+* Xuất ra: `assigned <name1> to <name2>`
+
+6. `assign <id> <list>` (Gán vào danh sách) 
+
+* Thêm công việc `<id>` vào danh sách `<list>`.
+* Một công việc có thể thuộc nhiều danh sách.
+* Xuất ra: `assigned <name> to <list>`
+
+7. `toggle <id>` 
+
+* Đánh dấu hoàn thành/chưa hoàn thành.
+* **Quan trọng:** Nếu đánh dấu cha là xong -> tất cả con cũng xong. Nếu bỏ đánh dấu cha -> tất cả con cũng bỏ đánh dấu.
+* Xuất ra: `toggled <name> and <no> subtasks` (với `<no>` là số lượng tác vụ con bị ảnh hưởng).
+
+8. `change-date <id> <date>` 
+
+* Đặt hoặc đổi hạn chót cho công việc.
+* Xuất ra: `changed <name> to <date>`
+
+9. `change-priority <id> [priority]` 
+
+* Đổi độ ưu tiên. Nếu không nhập `[priority]`, sẽ xóa độ ưu tiên cũ.
+* Xuất ra: `changed <name> to <priority>` (hoặc `NONE`).
+
+10. `delete <id>` 
+
+* Xóa công việc và tất cả công việc con của nó.
+* Xuất ra: `deleted <name> and <no> subtasks`
+
+11. `restore <id>` 
+
+* Khôi phục công việc đã xóa (kèm theo các con của nó).
+* Khôi phục cả mối quan hệ cha-con cũ (nếu cha chưa bị xóa) và danh sách cũ. Nếu cha đã bị xóa, nó trở thành công việc gốc.
+* Xuất ra: `restored <name> and <no> subtasks`
+
+12. `show <id>` 
+
+* Hiển thị thông tin chi tiết của một công việc (bao gồm các con).
+
+13. `todo` 
+
+* Hiển thị tất cả công việc **chưa hoàn thành**.
+* **Lưu ý:** Nếu cha chưa xong nhưng con đã xong, thì con **không** được hiển thị.
+
+14. `list <list>` 
+
+* Hiển thị tất cả công việc trong danh sách `<list>`.
+* Không hiển thị lại công việc con nếu cha của nó đã được hiển thị trong danh sách này.
+
+15. `tagged-with <tag>` 
+
+* Hiển thị tất cả công việc có thẻ này.
+* Tương tự `list`, không lặp lại công việc con nếu cha đã hiển thị.
+
+16. `find <name>` 
+
+* Tìm công việc mà tên **có chứa** chuỗi `<name>` (không cần khớp chính xác 100%).
+
+17. `upcoming <date>` 
+
+* Hiển thị các công việc có hạn chót trong vòng **7 ngày** kể từ ngày `<date>`.
+
+18. `before <date>` 
+
+* Hiển thị công việc có hạn chót **trước hoặc bằng** ngày `<date>`.
+
+19. `between <date1> <date2>` 
+
+* Hiển thị công việc có hạn chót nằm trong khoảng hai ngày này (tính cả 2 đầu mút).
+
+20. `duplicates` 
+
+* Tìm các công việc trùng lặp.
+* **Định nghĩa trùng lặp:** Hai công việc trùng nhau khi:
+1. Tên giống hệt nhau.
+2. Hạn chót giống nhau (hoặc cả 2 đều không có hạn, hoặc chỉ 1 trong 2 có hạn chót). *Lưu ý: Đoạn logic này khá lạ, hãy đọc kỹ đề: "die Frist ist identisch, falls beide eine Frist haben ODER maximal eine Aufgabe eine Frist hat"* -> Nghĩa là nếu cả 2 có hạn thì hạn phải giống nhau. Nếu 1 cái có, 1 cái không, hoặc cả 2 không có, thì vẫn tính là thỏa mãn điều kiện 2.
+
+
+* Xuất ra: `Found <no> duplicates: <id_list>`
+
+---
+
+### Mẹo để làm bài
+
+1. **Mô hình hóa (Modeling):** Tạo class `Task` thật chuẩn. Class này nên có các thuộc tính: `id`, `name`, `deadline`, `priority`, `tags`, `subtasks` (List), `parent`, `isDone`.
+2. **Đệ quy:** Các lệnh như `toggle`, `delete`, `show` sẽ cần đệ quy để xử lý hết cây công việc con.
+3. **Comparator:** Viết một `Comparator` riêng để xử lý logic sắp xếp (Ưu tiên -> ID) dùng cho việc hiển thị.
+4. **Parsing:** Xử lý chuỗi đầu vào cẩn thận, đặc biệt là các tham số tùy chọn trong lệnh `add`.
+
+Chúc bạn làm bài tốt! Nếu cần giải thích kỹ hơn về logic của lệnh nào, hãy hỏi nhé.
