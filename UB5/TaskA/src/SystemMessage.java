@@ -6,16 +6,36 @@
  */
 public enum SystemMessage {
 
-    ERROR_PREFIX("Error, "),
+    ERROR_PREFIX("Error: "),
 
-    LIST_EXISTS("List \"%s\" already exists."),
-    TAG_EXISTS("Tag \"%s\" already exists."),
-    TASK_NOT_FOUND("Task with ID \"%d\" does not exist."),
-    LIST_NOT_FOUND("List \"%s\" does not exist."),
+    LIST_EXISTS("list \"%s\" already exists"),
+    LIST_NOT_FOUND("list \"%s\" does not exist"),
+    LIST_EMPTY("list \"%s\" is empty")
+
+    TAG_EXISTS("tag \"%s\" already exists"),
+
+    TASK_NOT_FOUND("task with ID \"%d\" does not exist"),
+    TASK_DELETED("this task is deleted"),
+    TASK_IN_LIST("task already in list"),
+    TASK_DUPLICATE("Found %d duplicates: "),
+    ASSIGN_ITSELF("cannot assign task to itself"),
+    ASSIGN_WITH_CYCLE("cannot assign task as subtask of its descendant"),
+
+    SUCCESS_ADD_TASK("added %d: %s"),
+    SUCCESS_CREATE_LIST("added %s"),
+    SUCCESS_TAG("tagged %s with %s"),
+    SUCCESS_ASSIGN("assigned %s to %s"),
+    SUCCESS_TOGGLE("toggled %s and %d subtasks"),
+    SUCCESS_DELETE("deleted %s and %d subtasks"),
+    SUCCESS_RESTORE("restored %s and %d subtasks"),
+    SUCCESS_CHANGE_VALUES("changed %s to %s"),
+
+    NO_MATCHED("no tasks found"),
+    NO_DUPLICATE("no duplicate found"),
 
     private final String message;
 
-    private SystemMessage(String message) {
+    SystemMessage(String message) {
         this.message = message;
     }
 
