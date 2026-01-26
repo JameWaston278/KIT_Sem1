@@ -1,11 +1,8 @@
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -19,7 +16,7 @@ public class Procrastinot {
         this.userLists = new TreeMap<>();
     }
 
-    // ---BUSINESS METHODS---
+    // --- BUSINESS METHODS ---
 
     // Methods for Task
 
@@ -38,49 +35,77 @@ public class Procrastinot {
         return SystemMessage.SUCCESS_ADD_TASK.format(newTask.getId(), name);
     }
 
+    public String tagTask(int id, String tag) throws SystemException {
+        Task task = getTask(id);
+        task.addTag(tag);
+        return SystemMessage.SUCCESS_TAG.format(task.getName(), tag);
+    }
+
+    public String assignSubtask(int idChild, int idParent) throws SystemException {
+        Task child = getTask(idChild);
+        Task parent = getTask(idParent);
+        parent.addSubtask(child);
+        return SystemMessage.SUCCESS_ASSIGN.format(child.getName(), parent.getName());
+    }
+
+    public String toggle(int id) throws SystemException {
+        Task task = getTask(id);
+        int subCount = Math.max(0, task.toggle() - 1);
+        return SystemMessage.SUCCESS_TOGGLE.format(task.getName(), subCount);
+    }
+
+    public String changeDeadline(int id, LocalDate date) throws SystemException {
+        Task task = getTask(id);
+        task.setDeadline(date);
+        return SystemMessage.SUCCESS_CHANGE_VALUES.format(task.getName(), formatNullValue(date));
+    }
+
+    public String changePriority(int id, Priority priority) throws SystemException {
+        Task task = getTask(id);
+        task.setPriority(priority);
+        return SystemMessage.SUCCESS_CHANGE_VALUES.format(task.getName(), formatNullValue(priority));
+    }
+
+    public String deleteTask(int id) throws SystemException {
+        Task task = getTask(id);
+        int subCount = Math.max(0, task.setDeletedState(true) - 1);
+        return SystemMessage.SUCCESS_DELETE.format(task.getName(), subCount);
+    }
+
+    public String restoreTask(int id) throws SystemException {
+        Task task = getTask(id);
+        Task parent = task.getParent();
+
+        if (parent != null && parent.isDeleted()) {
+            task.detachFromParent();
+        }
+        int subCount = Math.max(0, task.setDeletedState(false) - 1);
+        return SystemMessage.SUCCESS_RESTORE.format(task.getName(), subCount);
+    }
+
     public String show() {
-        return searchWithConditon(task -> task.getParent() == null, child -> true);
+        return searchWithCondition(task -> task.getParent() == null, child -> true);
     }
 
     public String todo() {
-        return searchWithConditon(task -> task.getParent() == null && !task.isDone(), child -> !child.isDone());
+        return searchWithCondition(task -> task.getParent() == null && !task.isDone(), child -> !child.isDone());
     }
 
     public String hasTag(String tag) {
-        return searchWithConditon(task -> task.hasTag(tag), child -> true);
+        return searchWithCondition(task -> task.hasTag(tag), child -> true);
     }
 
     public String find(String name) {
-        return searchWithConditon(task -> task.hasName(name), child -> true);
+        return searchWithCondition(task -> task.hasName(name), child -> true);
     }
 
     public String searchTime(Predicate<LocalDate> condition) {
-        return searchWithConditon(task -> condition.test(task.getDeadline()), child -> true);
+        return searchWithCondition(task -> task.getDeadline() != null && condition.test(task.getDeadline()),
+                child -> true);
     }
 
     public String duplicates() {
-        Set<Integer> dupicateIds = new TreeSet<>();
-        List<Task> taskList = new ArrayList<>(allTasks.values());
-
-        for (int i = 0; i < taskList.size(); i++) {
-            for (int j = i + 1; j < taskList.size(); j++) {
-                Task t1 = taskList.get(i);
-                Task t2 = taskList.get(j);
-
-                if (isDuplicate(t1, t2)) {
-                    dupicateIds.add(t1.getId());
-                    dupicateIds.add(t2.getId());
-                }
-            }
-        }
-
-        if (dupicateIds.isEmpty()) {
-            return SystemMessage.NO_DUPLICATE.format();
-        }
-        String idListStr = dupicateIds.stream()
-                .map(String::valueOf)
-                .collect(Collectors.joining(", "));
-        return SystemMessage.TASK_DUPLICATE.format(dupicateIds.size(), idListStr);
+        return DuplicatesFinder.findDuplicates(this.allTasks);
     }
 
     // Methods for List
@@ -96,22 +121,38 @@ public class Procrastinot {
         return SystemMessage.SUCCESS_CREATE_LIST.format(name);
     }
 
+    public String tagList(String name, String tag) throws SystemException {
+        TaskList list = getList(name);
+        list.addNewTag(tag);
+        return SystemMessage.SUCCESS_TAG.format(name, tag);
+    }
+
+    public String assignToList(int id, String name) throws SystemException {
+        Task task = getTask(id);
+        TaskList list = getList(name);
+        list.addNewTask(task);
+        return SystemMessage.SUCCESS_ASSIGN.format(task.getName(), list.getName());
+    }
+
     public String showList(String name) throws SystemException {
         List<Task> taskInList = getList(name).getTasks();
 
-        List<Task> roots = new ArrayList<>();
-        for (Task task : taskInList) {
-            if (!hasAncestorInList(task, taskInList)) {
-                roots.add(task);
-            }
-        }
+        List<Task> roots = TaskUtils.filterRoots(taskInList);
         if (roots.isEmpty()) {
             return SystemMessage.LIST_EMPTY.format(name);
         }
-        return buildTreeOutput(roots, task -> true);
+        return TaskFormatter.formatTree(roots, task -> true);
     }
 
-    // ---HELPER METHODS---
+    // --- HELPER METHODS ---
+
+    private Task getTask(int id) throws SystemException {
+        Task task = allTasks.get(id);
+        if (task == null) {
+            throw new SystemException(SystemMessage.TASK_NOT_FOUND.format(id));
+        }
+        return task;
+    }
 
     private TaskList getList(String name) throws SystemException {
         TaskList list = userLists.get(name);
@@ -121,40 +162,11 @@ public class Procrastinot {
         return list;
     }
 
-    private boolean hasAncestorInList(Task task, List<Task> list) {
-        Task parent = task.getParent();
-        while (parent != null) {
-            if (list.contains(parent)) {
-                return true;
-            }
-            parent = parent.getParent();
-        }
-        return false;
+    private String formatNullValue(Object value) {
+        return (value == null) ? "NONE" : value.toString();
     }
 
-    private String buildTreeOutput(List<Task> taskToPrint, Predicate<Task> condition) {
-        if (taskToPrint.isEmpty()) {
-            return "";
-        }
-
-        StringBuilder result = new StringBuilder();
-        for (Task task : taskToPrint) {
-            appendRecursive(result, task, 0, condition);
-        }
-
-        return result.toString();
-    }
-
-    private void appendRecursive(StringBuilder result, Task task, int level, Predicate<Task> condition) {
-        result.append(task.getDetails(level));
-        for (Task subtask : task.getSubtasks()) {
-            if (!subtask.isDeleted() && condition.test(subtask)) {
-                appendRecursive(result, subtask, level + 1, condition);
-            }
-        }
-    }
-
-    private String searchWithConditon(Predicate<Task> searchCondition, Predicate<Task> childCondition) {
+    private String searchWithCondition(Predicate<Task> searchCondition, Predicate<Task> childCondition) {
         // search all tasks matches the condition
         List<Task> allMatches = allTasks.values().stream()
                 .filter(task -> !task.isDeleted() && searchCondition.test(task))
@@ -165,20 +177,8 @@ public class Procrastinot {
         }
 
         // Logic: remove child if its parent is also in list
-        List<Task> displayRoots = allMatches.stream()
-                .filter(task -> !hasAncestorInList(task, allMatches))
-                .collect(Collectors.toList());
+        List<Task> displayRoots = TaskUtils.filterRoots(allMatches);
 
-        return buildTreeOutput(displayRoots, childCondition);
-    }
-
-    private boolean isDuplicate(Task t1, Task t2) {
-        if (!t1.getName().equals(t2.getName())) {
-            return false;
-        }
-
-        boolean hasDeadline1 = (t1.getDeadline() != null);
-        boolean hasDeadline2 = (t2.getDeadline() != null);
-        return !(hasDeadline1 && hasDeadline2 && !t1.getDeadline().equals(t2.getDeadline()));
+        return TaskFormatter.formatTree(displayRoots, childCondition);
     }
 }

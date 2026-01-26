@@ -13,7 +13,7 @@ public class TaskList {
         this.name = name;
     }
 
-    // ---BUSINESS METHODS---
+    // --- BUSINESS METHODS ---
 
     public void addNewTag(String tag) throws SystemException {
         if (this.tags.contains(tag)) {
@@ -29,7 +29,7 @@ public class TaskList {
         this.tasks.add(task);
     }
 
-    // ---GETTERS---
+    // --- GETTERS ---
 
     public String getName() {
         return this.name;

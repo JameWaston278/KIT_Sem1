@@ -7,18 +7,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 public class Task {
-    // ---CONSTANTS---
-    private static final String INDENT_UNIT = "  ";
-    private static final String NEWLINE = "\n";
-    private static final String CHECKBOX_DONE = "- [x] ";
-    private static final String CHECKBOX_TODO = "- [ ] ";
-    private static final String PRIORITY_OPEN = " [";
-    private static final String PRIORITY_CLOSE = "]";
-    private static final String SEPARATOR = ":";
-    private static final String TAG_OPEN = " (";
-    private static final String TAG_CLOSE = ")";
-    private static final String TAG_DELIMITER = ", ";
-    private static final String DEADLINE_PREFIX = " --> ";
 
     // Identity
     private static int idCounter = 1;
@@ -43,11 +31,27 @@ public class Task {
         this.name = name;
     }
 
-    // ---BUSINESS METHODS---
+    // --- BUSINESS METHODS ---
 
     // Methods for task
+
+    public void assignSubtask(Task child) throws SystemException {
+        if (this.equals(child)) {
+            throw new SystemException(SystemMessage.ASSIGN_ITSELF.format());
+        }
+        // check: is child a ancestor of parent?
+        if (TaskUtils.isAncestor(this, child)) {
+            throw new SystemException(SystemMessage.ASSIGN_WITH_CYCLE.format());
+        }
+        this.addSubtask(child);
+    }
+
+    public boolean hasTag(String tag) {
+        return this.tags.contains(tag);
+    }
+
     public void addTag(String tag) throws SystemException {
-        if (this.tags.contains(tag)) {
+        if (hasTag(tag)) {
             throw new SystemException(SystemMessage.TAG_EXISTS.format(tag));
         }
         this.tags.add(tag);
@@ -59,62 +63,19 @@ public class Task {
         return setStateRecursive(targetState);
     }
 
-    protected void detachFromParent() {
-        if (this.parent != null) {
-            this.parent.removeSubtask(this);
-            this.parent = null;
-        }
-    }
-
     public boolean hasName(String name) {
         return this.name.contains(name);
-    }
-
-    public boolean hasTag(String tag) {
-        return this.tags.contains(tag);
-    }
-
-    public String getDetails(int level) {
-        StringBuilder result = new StringBuilder();
-
-        result.append(INDENT_UNIT.repeat(level))
-                .append(this.isDone ? CHECKBOX_DONE : CHECKBOX_TODO);
-
-        result.append(this.name);
-
-        if (this.priority != null) {
-            result.append(PRIORITY_OPEN)
-                    .append(this.priority)
-                    .append(PRIORITY_CLOSE);
-        }
-
-        result.append(!tags.isEmpty() || this.deadline != null ? SEPARATOR : "");
-
-        if (!tags.isEmpty()) {
-            result.append(TAG_OPEN)
-                    .append(String.join(TAG_DELIMITER, tags))
-                    .append(TAG_CLOSE);
-        }
-
-        if (this.deadline != null) {
-            result.append(DEADLINE_PREFIX).append(this.deadline);
-        }
-        result.append(NEWLINE);
-
-        return result.toString();
     }
 
     // Methods for subtask
 
     public void addSubtask(Task subtask) throws SystemException {
-        if (subtask.getParent() != null) {
-            subtask.getParent().removeSubtask(subtask);
-        }
+        subtask.detachFromParent();
         this.subtasks.add(subtask);
         subtask.setParent(this);
     }
 
-    // ---GETTERS---
+    // --- GETTERS ---
 
     public int getId() {
         return this.id;
@@ -149,10 +110,18 @@ public class Task {
     }
 
     public Set<String> getTags() {
-        return Collections.unmodifiableSet(this.tags);
+        return Collections.unmodifiableSet(tags);
     }
 
-    // ---SETTERS---
+    // --- SETTERS ---
+
+    protected void setParent(Task task) throws SystemException {
+        this.parent = task;
+    }
+
+    public int setDeletedState(boolean targetState) throws SystemException {
+        return setDeletedRecursive(targetState);
+    }
 
     public void setDeadline(LocalDate date) throws SystemException {
         ensureTaskIsActive();
@@ -164,19 +133,18 @@ public class Task {
         this.priority = priority;
     }
 
-    protected void setParent(Task task) throws SystemException {
-        this.parent = task;
-    }
-
-    public int setDeletedState(boolean targetState) throws SystemException {
-        return setDeletedRecursive(targetState);
-    }
-
-    // ---HELPER METHODS---
+    // --- HELPER METHODS ---
 
     private void ensureTaskIsActive() throws SystemException {
-        if (this.isDeleted == true) {
+        if (this.isDeleted) {
             throw new SystemException(SystemMessage.TASK_DELETED.format());
+        }
+    }
+
+    public void detachFromParent() {
+        if (this.parent != null) {
+            this.parent.subtasks.remove(this);
+            this.parent = null;
         }
     }
 
@@ -204,9 +172,5 @@ public class Task {
             count += subtask.setDeletedRecursive(targetState);
         }
         return count;
-    }
-
-    protected void removeSubtask(Task subtask) {
-        this.subtasks.remove(subtask);
     }
 }

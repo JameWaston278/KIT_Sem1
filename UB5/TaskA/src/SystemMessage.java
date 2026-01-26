@@ -7,10 +7,20 @@
 public enum SystemMessage {
 
     ERROR_PREFIX("Error: "),
+    UNREGISTERED_COMMAND("command not found"),
+
+    INVALID_ID("invalid ID: must be a positive integer"),
+    INVALID_NAME("invalid name: must not contain spaces or newlines"),
+    INVALID_LIST_NAME("invalid list name: must contain only letters"),
+    INVALID_PRIORITY("invalid priority. Expected: HI, MD, or LO"),
+    INVALID_DEADLINE("invalid date format. Expected: YYYY-MM-DD"),
+    INVALID_TAG_NAME("invalid tag: must contain only letters and numbers"),
+    INVALID_ARGUMENTS("invalid number of arguments. Expected at least %d"),
+    INVALID_PARAMETER("invalid parameter %s"),
 
     LIST_EXISTS("list \"%s\" already exists"),
     LIST_NOT_FOUND("list \"%s\" does not exist"),
-    LIST_EMPTY("list \"%s\" is empty")
+    LIST_EMPTY("list \"%s\" is empty"),
 
     TAG_EXISTS("tag \"%s\" already exists"),
 
@@ -31,7 +41,7 @@ public enum SystemMessage {
     SUCCESS_CHANGE_VALUES("changed %s to %s"),
 
     NO_MATCHED("no tasks found"),
-    NO_DUPLICATE("no duplicate found"),
+    NO_DUPLICATE("no duplicate found");
 
     private final String message;
 
