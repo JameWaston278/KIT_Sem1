@@ -1,5 +1,5 @@
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class TaskUtils {
     public static boolean isAncestor(Task potentialAncestor, Task target) {
@@ -25,8 +25,12 @@ public class TaskUtils {
     }
 
     public static List<Task> filterRoots(List<Task> inputList) {
-        return inputList.stream()
-                .filter(task -> !hasAncestorInList(task, inputList))
-                .collect(Collectors.toList());
+        List<Task> rootTasks = new ArrayList<>();
+        for (Task task : inputList) {
+            if (!TaskUtils.hasAncestorInList(task, inputList)) {
+                rootTasks.add(task);
+            }
+        }
+        return rootTasks;
     }
 }

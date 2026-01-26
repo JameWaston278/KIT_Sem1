@@ -1,10 +1,10 @@
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class Procrastinot {
 
@@ -146,9 +146,12 @@ public class Procrastinot {
     public String showList(String name) throws SystemException {
         List<Task> taskInList = getList(name).getTasks();
 
-        List<Task> activeTasks = taskInList.stream()
-                .filter(task -> !task.isDeleted())
-                .collect(Collectors.toList());
+        List<Task> activeTasks = new ArrayList<>();
+        for (Task task : taskInList) {
+            if (!task.isDeleted()) {
+                activeTasks.add(task);
+            }
+        }
         if (activeTasks.isEmpty()) {
             return SystemMessage.LIST_EMPTY.format(name);
         }
@@ -179,17 +182,18 @@ public class Procrastinot {
 
     private String searchWithCondition(Predicate<Task> searchCondition, Predicate<Task> childCondition) {
         // search all tasks matches the condition
-        List<Task> allMatches = allTasks.values().stream()
-                .filter(task -> !task.isDeleted() && searchCondition.test(task))
-                .collect(Collectors.toList());
+        List<Task> allMatches = new ArrayList<>();
+        for (Task task : allTasks.values()) {
+            if (!task.isDeleted() && searchCondition.test(task)) {
+                allMatches.add(task);
+            }
+        }
 
         if (allMatches.isEmpty()) {
             return SystemMessage.NO_MATCHED.format();
         }
-
         // Logic: remove child if its parent is also in list
         List<Task> displayRoots = TaskUtils.filterRoots(allMatches);
-
         return TaskFormatter.formatTree(displayRoots, childCondition);
     }
 
@@ -200,7 +204,6 @@ public class Procrastinot {
 
             if (!sub.isDone())
                 return true;
-
             if (hasActiveDescendant(sub))
                 return true;
         }

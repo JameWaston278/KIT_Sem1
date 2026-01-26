@@ -4,13 +4,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 public class DuplicatesFinder {
     private static final String DELIMITER = ", ";
 
     public static String findDuplicates(Map<Integer, Task> allTasks) {
-        Set<Integer> dupicateIds = new TreeSet<>();
+        Set<Integer> duplicateIds = new TreeSet<>();
         List<Task> taskList = new ArrayList<>(allTasks.values());
 
         for (int i = 0; i < taskList.size(); i++) {
@@ -19,19 +18,27 @@ public class DuplicatesFinder {
                 Task t2 = taskList.get(j);
 
                 if (isDuplicate(t1, t2)) {
-                    dupicateIds.add(t1.getId());
-                    dupicateIds.add(t2.getId());
+                    duplicateIds.add(t1.getId());
+                    duplicateIds.add(t2.getId());
                 }
             }
         }
 
-        if (dupicateIds.isEmpty()) {
+        if (duplicateIds.isEmpty()) {
             return SystemMessage.NO_DUPLICATE.format();
         }
-        String idListStr = dupicateIds.stream()
-                .map(String::valueOf)
-                .collect(Collectors.joining(DELIMITER));
-        return SystemMessage.TASK_DUPLICATE.format(dupicateIds.size(), idListStr);
+
+        StringBuilder result = new StringBuilder();
+        int count = 0;
+        for (Integer id : duplicateIds) {
+            result.append(id);
+            count++;
+            if (count < duplicateIds.size()) {
+                result.append(DELIMITER);
+            }
+        }
+        String idListStr = result.toString();
+        return SystemMessage.TASK_DUPLICATE.format(duplicateIds.size(), idListStr);
     }
 
     private static boolean isDuplicate(Task t1, Task t2) {
