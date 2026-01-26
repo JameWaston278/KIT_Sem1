@@ -78,8 +78,12 @@ public class Procrastinot {
 
         if (parent != null && parent.isDeleted()) {
             task.detachFromParent();
+            parent = null;
         }
         int subCount = Math.max(0, task.setDeletedState(false) - 1);
+        if (parent != null) {
+            parent.addSubtask(task);
+        }
         return SystemMessage.SUCCESS_RESTORE.format(task.getName(), subCount);
     }
 
@@ -87,8 +91,13 @@ public class Procrastinot {
         return searchWithCondition(task -> task.getParent() == null, child -> true);
     }
 
+    public String show(int id) {
+        return searchWithCondition(task -> task.getParent() == null && task.getId() == id, child -> true);
+    }
+
     public String todo() {
-        return searchWithCondition(task -> task.getParent() == null && !task.isDone(), child -> !child.isDone());
+        return searchWithCondition(task -> task.getParent() == null && (!task.isDone() || hasActiveDescendant(task)),
+                child -> !child.isDone() || hasActiveDescendant(child));
     }
 
     public String hasTag(String tag) {
@@ -137,11 +146,13 @@ public class Procrastinot {
     public String showList(String name) throws SystemException {
         List<Task> taskInList = getList(name).getTasks();
 
-        List<Task> roots = TaskUtils.filterRoots(taskInList);
-        if (roots.isEmpty()) {
+        List<Task> activeTasks = taskInList.stream()
+                .filter(task -> !task.isDeleted())
+                .collect(Collectors.toList());
+        if (activeTasks.isEmpty()) {
             return SystemMessage.LIST_EMPTY.format(name);
         }
-        return TaskFormatter.formatTree(roots, task -> true);
+        return TaskFormatter.formatTree(activeTasks, task -> true);
     }
 
     // --- HELPER METHODS ---
@@ -180,5 +191,19 @@ public class Procrastinot {
         List<Task> displayRoots = TaskUtils.filterRoots(allMatches);
 
         return TaskFormatter.formatTree(displayRoots, childCondition);
+    }
+
+    private boolean hasActiveDescendant(Task task) {
+        for (Task sub : task.getSubtasks()) {
+            if (sub.isDeleted())
+                continue;
+
+            if (!sub.isDone())
+                return true;
+
+            if (hasActiveDescendant(sub))
+                return true;
+        }
+        return false;
     }
 }

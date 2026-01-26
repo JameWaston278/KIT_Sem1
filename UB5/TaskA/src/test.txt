@@ -8,3 +8,34 @@ assign 3 2
 toggle 4
 assign 4 2
 add-list timeCommands
+assign 3 timeCommands
+add command_change-date
+assign 6 2
+assign 6 timeCommands
+tag 2 incomplete
+add check_for_leap_year 2024-02-29
+assign 7 3
+assign 2 1
+show 1
+toggle 5
+change-date 6 2023-07-27
+toggle 6
+upcoming 2023-07-26
+add variations_of_optional_parameters LO
+assign 8 3
+list timeCommands
+delete 3
+list timeCommands
+show 1
+restore 3
+tagged-with incomplete
+toggle 7
+todo
+add check_for_leap_year
+assign 9 6
+duplicates
+before 2023-07-30
+change-priority 8 HI
+tag timeCommands confusing
+find s
+toggle 1

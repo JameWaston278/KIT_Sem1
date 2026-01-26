@@ -64,9 +64,11 @@ public final class CommandHandler {
         commands.put(CommandType.ASSIGN.getName(), this::handleAssign);
         commands.put(CommandType.CHANGE_DATE.getName(), this::handleChangeDate);
         commands.put(CommandType.CHANGE_PRIORITY.getName(), this::handleChangePriority);
+        commands.put(CommandType.LIST.getName(), this::handleShowList);
         commands.put(CommandType.BETWEEN.getName(), this::handleBetween);
 
-        commands.put(CommandType.SHOW.getName(), args -> app.show());
+        commands.put(CommandType.SHOW.getName(),
+                args -> (args.length == 0) ? app.show() : app.show(InputValidator.parseId(args[0])));
         commands.put(CommandType.TODO.getName(), args -> app.todo());
         commands.put(CommandType.DUPLICATES.getName(), args -> app.duplicates());
     }
@@ -177,8 +179,8 @@ public final class CommandHandler {
 
     private String handleChangePriority(String[] args) throws SystemException {
         checkArgLength(args, 1);
-        Priority p = (args.length > 1) ? InputValidator.parsePriority(args[1]) : null;
-        return app.changePriority(InputValidator.parseId(args[0]), p);
+        Priority priority = (args.length > 1) ? InputValidator.parsePriority(args[1]) : null;
+        return app.changePriority(InputValidator.parseId(args[0]), priority);
     }
 
     private String handleBetween(String[] args) throws SystemException {
@@ -186,5 +188,10 @@ public final class CommandHandler {
         LocalDate start = InputValidator.parseDate(args[0]);
         LocalDate end = InputValidator.parseDate(args[1]);
         return app.searchTime(date -> !date.isBefore(start) && !date.isAfter(end));
+    }
+
+    private String handleShowList(String[] args) throws SystemException {
+        checkArgLength(args, 1);
+        return app.showList(InputValidator.validateListName(args[0]));
     }
 }

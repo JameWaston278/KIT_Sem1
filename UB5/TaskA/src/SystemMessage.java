@@ -27,7 +27,7 @@ public enum SystemMessage {
     TASK_NOT_FOUND("task with ID \"%d\" does not exist"),
     TASK_DELETED("this task is deleted"),
     TASK_IN_LIST("task already in list"),
-    TASK_DUPLICATE("Found %d duplicates: "),
+    TASK_DUPLICATE("Found %d duplicates: %s"),
     ASSIGN_ITSELF("cannot assign task to itself"),
     ASSIGN_WITH_CYCLE("cannot assign task as subtask of its descendant"),
 

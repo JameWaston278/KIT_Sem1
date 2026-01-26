@@ -20,10 +20,27 @@ public class TaskFormatter {
     private static final String TAG_DELIMITER = ", ";
     private static final String DEADLINE_PREFIX = " --> ";
 
-    public static final Comparator<Task> TASK_COMPARATOR = Comparator
-            .<Task, Priority>comparing(task -> task.getPriority(),
-                    Comparator.nullsLast(Comparator.naturalOrder()))
-            .thenComparingInt(task -> task.getId());
+    public static final Comparator<Task> TASK_COMPARATOR = (t1, t2) -> {
+        int p1 = getPriorityRank(t1.getPriority());
+        int p2 = getPriorityRank(t2.getPriority());
+
+        int priorityResult = Integer.compare(p1, p2);
+        if (priorityResult != 0) {
+            return priorityResult;
+        }
+        return 0;
+    };
+
+    private static int getPriorityRank(Priority p) {
+        if (p == null)
+            return 3;
+        return switch (p.name()) {
+            case "HI" -> 0;
+            case "MD" -> 1;
+            case "LO" -> 2;
+            default -> 3;
+        };
+    }
 
     public static String formatSingleTask(Task task, int level) {
         StringBuilder result = new StringBuilder();
@@ -68,6 +85,10 @@ public class TaskFormatter {
         StringBuilder result = new StringBuilder();
         for (Task task : taskToPrint) {
             appendRecursive(result, task, 0, condition);
+        }
+
+        if (result.length() > 0) {
+            result.deleteCharAt(result.length() - 1);
         }
 
         return result.toString();

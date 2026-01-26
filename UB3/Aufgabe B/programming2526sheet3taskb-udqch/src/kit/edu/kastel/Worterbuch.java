@@ -17,7 +17,6 @@ import java.util.Scanner;
  * @since 16.12.2025
  */
 public class Worterbuch {
-    private Scanner input;
 
     /**
      * function determines if the inputed command valid and the format of
