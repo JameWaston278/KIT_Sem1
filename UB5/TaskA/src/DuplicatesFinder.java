@@ -1,3 +1,5 @@
+package kit.edu.kastel;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -5,9 +7,25 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class DuplicatesFinder {
+/**
+ * Utility class to find duplicate tasks.
+ * Duplicates are defined as tasks with the same name and compatible deadlines.
+ *
+ * @author udqch
+ */
+public final class DuplicatesFinder {
     private static final String DELIMITER = ", ";
 
+    /** Private constructor. */
+    private DuplicatesFinder() {
+    }
+
+    /**
+     * Finds duplicates across all tasks in the system.
+     *
+     * @param allTasks The map of all tasks.
+     * @return A formatted string listing IDs of duplicate tasks.
+     */
     public static String findDuplicates(Map<Integer, Task> allTasks) {
         Set<Integer> duplicateIds = new TreeSet<>();
         List<Task> taskList = new ArrayList<>(allTasks.values());
@@ -25,7 +43,7 @@ public class DuplicatesFinder {
         }
 
         if (duplicateIds.isEmpty()) {
-            return SystemMessage.NO_DUPLICATE.format();
+            return SystemMessage.TASK_DUPLICATE.format(0);
         }
 
         StringBuilder result = new StringBuilder();
@@ -41,6 +59,13 @@ public class DuplicatesFinder {
         return SystemMessage.TASK_DUPLICATE.format(duplicateIds.size(), idListStr);
     }
 
+    /**
+     * Checks duplicate between 2 tasks.
+     * 
+     * @param t1 Tasks 1.
+     * @param t2 Tasks 2.
+     * @return true if two tasks duplicate.
+     */
     private static boolean isDuplicate(Task t1, Task t2) {
         if (!t1.getName().equals(t2.getName())) {
             return false;

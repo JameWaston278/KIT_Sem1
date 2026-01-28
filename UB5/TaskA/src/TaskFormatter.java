@@ -1,3 +1,4 @@
+package kit.edu.kastel;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -6,8 +7,30 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
-public class TaskFormatter {
+/**
+ * Utility class for formatting tasks into strings for display.
+ * Handles indentation, tree structure, and sorting.
+ *
+ * @author udqch
+ */
+public final class TaskFormatter {
+
+    /**
+     * Comparator to sort tasks first by priority (HI > MD > LO > None),
+     * then by ID (ascending).
+     */
+    public static final Comparator<Task> TASK_COMPARATOR = (t1, t2) -> {
+        int p1 = getPriorityRank(t1.getPriority());
+        int p2 = getPriorityRank(t2.getPriority());
+
+        int priorityResult = Integer.compare(p1, p2);
+        if (priorityResult != 0) {
+            return priorityResult;
+        }
+        return 0;
+    };
     // ---CONSTANTS---
+    private static final String NONE = "NONE";
     private static final String INDENT_UNIT = "  ";
     private static final String NEWLINE = "\n";
     private static final String CHECKBOX_DONE = "- [x] ";
@@ -20,20 +43,20 @@ public class TaskFormatter {
     private static final String TAG_DELIMITER = ", ";
     private static final String DEADLINE_PREFIX = " --> ";
 
-    public static final Comparator<Task> TASK_COMPARATOR = (t1, t2) -> {
-        int p1 = getPriorityRank(t1.getPriority());
-        int p2 = getPriorityRank(t2.getPriority());
+    /** Private constructor. */
+    private TaskFormatter() {
+    }
 
-        int priorityResult = Integer.compare(p1, p2);
-        if (priorityResult != 0) {
-            return priorityResult;
-        }
-        return 0;
-    };
-
+    /**
+     * Helper method to get priority rank.
+     * 
+     * @param p The input priority.
+     * @return The rank of priority.
+     */
     private static int getPriorityRank(Priority p) {
-        if (p == null)
+        if (p == null) {
             return 3;
+        }
         return switch (p.name()) {
             case "HI" -> 0;
             case "MD" -> 1;
@@ -42,6 +65,23 @@ public class TaskFormatter {
         };
     }
 
+    /**
+     * Formats a nullable object to "NONE" or its string representation.
+     *
+     * @param value The object to format.
+     * @return The formatted string.
+     */
+    public static String formatNullValue(Object value) {
+        return (value == null) ? NONE : value.toString();
+    }
+
+    /**
+     * Formats a single task line with indentation.
+     *
+     * @param task  The task to format.
+     * @param level The indentation level.
+     * @return The formatted string.
+     */
     public static String formatSingleTask(Task task, int level) {
         StringBuilder result = new StringBuilder();
 
@@ -75,6 +115,13 @@ public class TaskFormatter {
         return result.toString();
     }
 
+    /**
+     * Formats a list of tasks into a hierarchical tree structure.
+     *
+     * @param taskToPrint List of tasks to print.
+     * @param condition   Predicate to filter which subtasks to display.
+     * @return The full formatted tree string.
+     */
     public static String formatTree(List<Task> taskToPrint, Predicate<Task> condition) {
         if (taskToPrint.isEmpty()) {
             return null;
@@ -94,6 +141,14 @@ public class TaskFormatter {
         return result.toString();
     }
 
+    /**
+     * Recursive method accesses subtasks of task.
+     * 
+     * @param result    String of result.
+     * @param task      Current task.
+     * @param level     Level of task in hierarchical tree strutre.
+     * @param condition Predicate to filter.
+     */
     private static void appendRecursive(StringBuilder result, Task task, int level, Predicate<Task> condition) {
         result.append(formatSingleTask(task, level));
 
