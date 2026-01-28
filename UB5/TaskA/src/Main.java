@@ -1,4 +1,3 @@
-package kit.edu.kastel;
 
 import java.io.FileNotFoundException;
 import java.util.Scanner;

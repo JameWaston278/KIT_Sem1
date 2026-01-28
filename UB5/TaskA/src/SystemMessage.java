@@ -1,5 +1,3 @@
-package kit.edu.kastel;
-
 /**
  * Centralizes all system output messages, error notifications, and validation
  * warnings. Uses format specifiers (e.g., %s, %d) for dynamic content.
@@ -49,10 +47,14 @@ public enum SystemMessage {
     TASK_NOT_FOUND("task with ID \"%d\" does not exist."),
     /** Error when attempting modification on a deleted task. */
     TASK_DELETED("this task is deleted."),
+    /** Error when attempting restore an active task. */
+    TASK_ACTIVE("this task is still active."),
     /** Error when adding a task to a list it already belongs to. */
     TASK_IN_LIST("task already in list."),
     /** Message prefix for duplicate task findings. */
     TASK_DUPLICATE("Found %d duplicates: %s"),
+    /** Message for assign two times. */
+    ASSIGNED("%s is already subtask of %s"),
     /** Error when assigning a task to itself. */
     ASSIGN_ITSELF("cannot assign task to itself."),
     /** Error when creating a circular dependency. */

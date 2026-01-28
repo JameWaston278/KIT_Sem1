@@ -1,4 +1,3 @@
-package kit.edu.kastel;
 
 import java.util.ArrayList;
 import java.util.List;

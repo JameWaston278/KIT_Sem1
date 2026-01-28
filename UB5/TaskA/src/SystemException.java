@@ -1,4 +1,3 @@
-package kit.edu.kastel;
 
 /**
  * Custom exception class for system errors.

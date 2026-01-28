@@ -1,4 +1,3 @@
-package kit.edu.kastel;
 
 /**
  * Represents the priority levels for a task.

@@ -1,5 +1,3 @@
-package kit.edu.kastel;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,25 +54,22 @@ public class Task {
      *                         detected).
      */
     public void assignSubtask(Task child) throws SystemException {
+        if (this.subtasks.contains(child)) {
+            throw new SystemException(SystemMessage.ASSIGNED.format(child.getName(), parent.getName()));
+        }
         if (this.equals(child)) {
             throw new SystemException(SystemMessage.ASSIGN_ITSELF.format());
         }
         if (TaskUtils.isAncestor(this, child)) {
             throw new SystemException(SystemMessage.ASSIGN_WITH_CYCLE.format());
         }
-        ensureTaskIsActive();
-        child.ensureTaskIsActive();
-        this.addSubtask(child);
-    }
 
-    /**
-     * Checks if the task has a specific tag.
-     *
-     * @param tag The tag to check.
-     * @return true if the tag exists, false otherwise.
-     */
-    public boolean hasTag(String tag) {
-        return this.tags.contains(tag);
+        this.ensureTaskIsActive();
+        child.ensureTaskIsActive();
+
+        child.detachFromParent();
+        this.subtasks.add(child);
+        child.setParent(this);
     }
 
     /**
@@ -84,7 +79,7 @@ public class Task {
      * @throws SystemException If the tag already exists.
      */
     public void addTag(String tag) throws SystemException {
-        if (hasTag(tag)) {
+        if (this.tags.contains(tag)) {
             throw new SystemException(SystemMessage.TAG_EXISTS.format(tag));
         }
         ensureTaskIsActive();
@@ -92,37 +87,77 @@ public class Task {
     }
 
     /**
-     * Toggles the done state of the task and all its subtasks.
+     * Toggle task and its relation recursively.
+     * 
+     * @param targetState The new state.
+     * @return The number of affected subtasks.
+     */
+    public int setDoneState(boolean targetState) {
+        if (this.isDeleted) {
+            return 0;
+        }
+        this.isDone = targetState;
+        int count = 1;
+
+        for (Task subtask : subtasks) {
+            count += subtask.setDoneState(targetState);
+        }
+        return count;
+    }
+
+    /**
+     * Delete/ restore task and its relation recursively.
+     * 
+     * @param targetState The new state.
+     * @return The number of affected subtasks.
+     */
+    public int setDeleteState(boolean targetState) {
+        if (this.isDeleted == targetState) {
+            return 0;
+        }
+        this.isDeleted = targetState;
+        int count = 1;
+
+        for (Task subtask : subtasks) {
+            count += subtask.setDeleteState(targetState);
+        }
+        return count;
+    }
+
+    /**
+     * Moves an existing subtask to the end of the list.
+     * Used ONLY for restoration logic to fix display order.
+     * 
+     * @param child The subtask need to be removed.
+     */
+    protected void moveSubtaskToEnd(Task child) {
+        if (this.subtasks.remove(child)) {
+            this.subtasks.add(child);
+        }
+    }
+
+    /**
+     * Detaches this task from its parent.
+     * Used when restoring a task whose parent is deleted (Orphan logic).
+     */
+    protected void detachFromParent() {
+        if (this.parent != null) {
+            this.parent.subtasks.remove(this);
+            this.parent = null;
+        }
+    }
+
+    // --- HELPER METHODS ---
+
+    /**
+     * Ensures the task is not deleted before performing modifications.
      *
-     * @return The number of tasks affected (including subtasks).
      * @throws SystemException If the task is deleted.
      */
-    public int toggle() throws SystemException {
-        ensureTaskIsActive();
-        boolean targetState = !this.isDone;
-        return setStateRecursive(targetState);
-    }
-
-    /**
-     * Checks if the task name contains the given string.
-     *
-     * @param name The substring to search for.
-     * @return true if the name contains the input string.
-     */
-    public boolean hasName(String name) {
-        return this.name.contains(name);
-    }
-
-    /**
-     * Internal method to link a subtask.
-     * Detaches the subtask from its old parent before adding.
-     *
-     * @param subtask The subtask to add.
-     */
-    public void addSubtask(Task subtask) {
-        subtask.detachFromParent();
-        this.subtasks.add(subtask);
-        subtask.setParent(this);
+    private void ensureTaskIsActive() throws SystemException {
+        if (this.isDeleted) {
+            throw new SystemException(SystemMessage.TASK_DELETED.format());
+        }
     }
 
     // --- GETTERS ---
@@ -221,16 +256,6 @@ public class Task {
     }
 
     /**
-     * Recursively sets the deleted state of the task and its subtasks.
-     *
-     * @param targetState true to delete, false to restore.
-     * @return The number of tasks affected.
-     */
-    public int setDeletedState(boolean targetState) {
-        return setDeletedRecursive(targetState);
-    }
-
-    /**
      * Sets the deadline of the task.
      *
      * @param date The new deadline date.
@@ -250,66 +275,5 @@ public class Task {
     public void setPriority(Priority priority) throws SystemException {
         ensureTaskIsActive();
         this.priority = priority;
-    }
-
-    // --- HELPER METHODS ---
-
-    /**
-     * Ensures the task is not deleted before performing modifications.
-     *
-     * @throws SystemException If the task is deleted.
-     */
-    private void ensureTaskIsActive() throws SystemException {
-        if (this.isDeleted) {
-            throw new SystemException(SystemMessage.TASK_DELETED.format());
-        }
-    }
-
-    /**
-     * Detaches this task from its current parent, if any.
-     */
-    public void detachFromParent() {
-        if (this.parent != null) {
-            this.parent.subtasks.remove(this);
-            this.parent = null;
-        }
-    }
-
-    /**
-     * Toggle task and its relation recursively.
-     * 
-     * @param targetState The new state.
-     * @return The number of affected subtasks.
-     */
-    private int setStateRecursive(boolean targetState) {
-        if (this.isDeleted) {
-            return 0;
-        }
-        this.isDone = targetState;
-        int count = 1;
-
-        for (Task subtask : subtasks) {
-            count += subtask.setStateRecursive(targetState);
-        }
-        return count;
-    }
-
-    /**
-     * Delete/ restore task and its relation recursively.
-     * 
-     * @param targetState The new state.
-     * @return The number of affected subtasks.
-     */
-    private int setDeletedRecursive(boolean targetState) {
-        if (this.isDeleted == targetState) {
-            return 0;
-        }
-        this.isDeleted = targetState;
-        int count = 1;
-
-        for (Task subtask : subtasks) {
-            count += subtask.setDeletedRecursive(targetState);
-        }
-        return count;
     }
 }

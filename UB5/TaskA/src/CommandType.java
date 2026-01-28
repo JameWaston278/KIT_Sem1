@@ -1,4 +1,3 @@
-package kit.edu.kastel;
 
 /**
  * Enumeration of all supported commands in the application.

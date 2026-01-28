@@ -1,4 +1,3 @@
-package kit.edu.kastel;
 
 import java.time.LocalDate;
 import java.util.ArrayList;

@@ -1,5 +1,3 @@
-package kit.edu.kastel;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -52,6 +50,20 @@ public class TaskList {
             throw new SystemException(SystemMessage.TASK_IN_LIST.format());
         }
         this.tasks.add(task);
+    }
+
+    /**
+     * Moves the specified task to the end of this list.
+     * Used for restoration logic to update display order.
+     *
+     * @param task The task to move.
+     */
+    public void moveTaskToEnd(Task task) {
+        // Truy cập trực tiếp vào biến 'tasks' (hoặc tên biến list nội bộ của bạn)
+        // Lưu ý: Phải thao tác trên biến List gốc, không phải qua hàm getter
+        if (this.tasks.remove(task)) {
+            this.tasks.add(task);
+        }
     }
 
     // --- GETTERS ---

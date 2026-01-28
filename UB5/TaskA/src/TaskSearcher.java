@@ -1,4 +1,3 @@
-package kit.edu.kastel;
 
 import java.util.HashSet;
 import java.util.Map;

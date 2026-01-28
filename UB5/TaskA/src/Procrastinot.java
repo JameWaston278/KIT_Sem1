@@ -1,32 +1,27 @@
-package kit.edu.kastel;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Predicate;
 
 /**
- * The main application logic controller.
- * Manages the collection of all tasks and user-defined lists.
- * Executes business logic commands.
+ * Main controller class. Manages tasks, lists and executes commands.
+ * Handles the storage and business logic for the application.
  *
  * @author udqch
  */
 public class Procrastinot {
-    private final Map<Integer, Task> allTasks;
-    private final Map<String, TaskList> userLists;
+    private final Map<Integer, Task> allTasks = new LinkedHashMap<>();
+    private final Map<String, TaskList> userLists = new TreeMap<>();
 
-    /** Initialize databases. */
+    /** Initializes the task and list databases. */
     public Procrastinot() {
-        this.allTasks = new TreeMap<>();
-        this.userLists = new TreeMap<>();
     }
 
-    // --- BUSINESS METHODS ---
+    // --- TASK OPERATIONS ---
 
-    // Methods for tasks
     /**
      * Creates and adds a new task to the system.
      *
@@ -34,19 +29,21 @@ public class Procrastinot {
      * @param priority The priority (can be null).
      * @param date     The deadline date (can be null).
      * @return Success message string.
-     * @throws SystemException If parameters are invalid.
+     * @throws SystemException If invalid parameters provided (though currently
+     *                         handled internally).
      */
     public String addTask(String name, Priority priority, LocalDate date) throws SystemException {
         Task newTask = new Task(name);
-
-        // set optional parameters
         if (priority != null) {
             newTask.setPriority(priority);
         }
         if (date != null) {
-            newTask.setDeadline(date);
+            try {
+                newTask.setDeadline(date);
+            } catch (SystemException ignored) {
+                // Should not happen for new tasks
+            }
         }
-
         allTasks.put(newTask.getId(), newTask);
         return SystemMessage.SUCCESS_ADD_TASK.format(newTask.getId(), name);
     }
@@ -71,7 +68,7 @@ public class Procrastinot {
      * @param idChild  The ID of the subtask.
      * @param idParent The ID of the parent task.
      * @return Success message string.
-     * @throws SystemException If tasks not found or assignment invalid.
+     * @throws SystemException If cycle detected or invalid assignment.
      */
     public String assignSubtask(int idChild, int idParent) throws SystemException {
         Task child = getTask(idChild);
@@ -81,25 +78,25 @@ public class Procrastinot {
     }
 
     /**
-     * Toggles the completion status of a task.
+     * Toggles the completion status of a task and its descendants.
      *
      * @param id The ID of the task.
-     * @return Success message string indicating number of affected tasks.
+     * @return Success message string with affected count.
      * @throws SystemException If task not found.
      */
     public String toggle(int id) throws SystemException {
         Task task = getTask(id);
-        int subCount = Math.max(0, task.toggle() - 1);
+        int subCount = Math.max(0, task.setDoneState(!task.isDone()) - 1);
         return SystemMessage.SUCCESS_TOGGLE.format(task.getName(), subCount);
     }
 
     /**
-     * Changes the deadline of a task.
+     * Updates the deadline of a task.
      *
      * @param id   The ID of the task.
-     * @param date The new deadline date.
+     * @param date The new deadline.
      * @return Success message string.
-     * @throws SystemException If task not found.
+     * @throws SystemException If task not found or deleted.
      */
     public String changeDeadline(int id, LocalDate date) throws SystemException {
         Task task = getTask(id);
@@ -108,12 +105,12 @@ public class Procrastinot {
     }
 
     /**
-     * Changes the priority of a task.
+     * Updates the priority of a task.
      *
      * @param id       The ID of the task.
-     * @param priority The new priority (can be null).
+     * @param priority The new priority.
      * @return Success message string.
-     * @throws SystemException If task not found.
+     * @throws SystemException If task not found or deleted.
      */
     public String changePriority(int id, Priority priority) throws SystemException {
         Task task = getTask(id);
@@ -122,131 +119,129 @@ public class Procrastinot {
     }
 
     /**
-     * Deletes a task and its subtasks (soft delete).
+     * Soft deletes a task and its descendants.
      *
      * @param id The ID of the task.
      * @return Success message string.
-     * @throws SystemException If task not found.
+     * @throws SystemException If task is already deleted.
      */
     public String deleteTask(int id) throws SystemException {
         Task task = getTask(id);
         if (task.isDeleted()) {
             throw new SystemException(SystemMessage.TASK_DELETED.format());
         }
-        int subCount = Math.max(0, task.setDeletedState(true) - 1);
+        int subCount = Math.max(0, task.setDeleteState(true) - 1);
         return SystemMessage.SUCCESS_DELETE.format(task.getName(), subCount);
     }
 
     /**
-     * Restores a deleted task.
+     * Restores a task, handling orphans and updating list order.
      *
      * @param id The ID of the task.
      * @return Success message string.
-     * @throws SystemException If task not found.
+     * @throws SystemException If task is already active.
      */
     public String restoreTask(int id) throws SystemException {
         Task task = getTask(id);
-        Task parent = task.getParent();
-        if (parent != null) {
-            parent.addSubtask(task);
+        if (!task.isDeleted()) {
+            throw new SystemException(SystemMessage.TASK_ACTIVE.format());
         }
-        int subCount = Math.max(0, task.setDeletedState(false) - 1);
+
+        int subCount = Math.max(0, task.setDeleteState(false) - 1);
+        Task parent = task.getParent();
+
+        if (parent != null) {
+            if (parent.isDeleted()) {
+                task.detachFromParent();
+            } else {
+                parent.moveSubtaskToEnd(task);
+            }
+        }
+
+        allTasks.put(id, allTasks.remove(id)); // Move to end of main map
+        moveTaskToEndOfUserLists(task); // Move to end of user lists
         return SystemMessage.SUCCESS_RESTORE.format(task.getName(), subCount);
     }
 
+    // --- SEARCH & VIEW OPERATIONS ---
+
     /**
-     * Shows all root tasks.
-     * Uses LAX mode to show everything.
-     * 
-     * @return Success message string.
-     * 
+     * Shows all root tasks using LAX mode.
+     *
+     * @return Formatted tree string.
      */
     public String show() {
         return executeSearch(task -> task.getParent() == null, TaskSearcher.SearchMode.LAX);
     }
 
     /**
-     * Shows a specific task and its subtasks.
-     * Uses LAX mode.
-     * 
-     * @param id The id of task.
-     * @return Success message string.
+     * Shows a specific task tree using LAX mode.
+     *
+     * @param id The ID of the root task to show.
+     * @return Formatted tree string.
      */
     public String show(int id) {
         return executeSearch(task -> task.getId() == id, TaskSearcher.SearchMode.LAX);
     }
 
     /**
-     * Shows all incomplete tasks.
-     * Custom logic: Show if !Done OR hasActiveDescendant.
-     * 
-     * @return Success message string.
+     * Shows tasks that are incomplete or have active descendants.
+     *
+     * @return Formatted tree string.
      */
     public String todo() {
+        Predicate<Task> isActive = t -> !t.isDone() || TaskUtils.hasActiveDescendant(t);
         List<Task> roots = new ArrayList<>();
-
         for (Task task : allTasks.values()) {
-            if (!task.isDeleted() && task.getParent() == null) {
-                if (!task.isDone() || TaskUtils.hasActiveDescendant(task)) {
-                    roots.add(task);
-                }
+            if (!task.isDeleted() && task.getParent() == null && isActive.test(task)) {
+                roots.add(task);
             }
         }
-        return TaskFormatter.formatTree(roots,
-                task -> !task.isDone() || TaskUtils.hasActiveDescendant(task));
+        return TaskFormatter.formatTree(roots, isActive);
     }
 
     /**
-     * Finds tasks containing a specific name substring.
-     * Uses STRICT mode: Children of DONE tasks are hidden unless they match
-     * directly.
+     * Finds tasks by name using STRICT mode (hides children of done parents).
      *
-     * @param name The name to search for.
-     * @return Formatted string tree.
+     * @param name The substring to search for.
+     * @return Formatted tree string.
      */
     public String find(String name) {
-        // Criteria: Name matches AND (Parent is null OR Parent is not Done)
-        // This preserves the "Hide children of Done parents" rule for direct hits
-        Predicate<Task> criteria = task -> task.hasName(name)
-                && (task.getParent() == null || !task.getParent().isDone());
-
-        return executeSearch(criteria, TaskSearcher.SearchMode.STRICT);
+        return executeSearch(t -> t.getName().contains(name)
+                && (t.getParent() == null || !t.getParent().isDone()), TaskSearcher.SearchMode.STRICT);
     }
 
     /**
-     * Finds tasks by a specific tag.
-     * Uses LAX mode: Shows full context (children) even if parent is Done.
+     * Finds tasks by tag using LAX mode.
      *
      * @param tag The tag to search for.
-     * @return Formatted string tree.
+     * @return Formatted tree string.
      */
     public String hasTag(String tag) {
-        return executeSearch(task -> task.hasTag(tag), TaskSearcher.SearchMode.LAX);
+        return executeSearch(t -> t.getTags().contains(tag), TaskSearcher.SearchMode.LAX);
     }
 
     /**
-     * Filters tasks based on a date condition (deadline).
-     * Uses LAX mode: Shows full context for time-planning purposes.
+     * Finds tasks matching a date condition using LAX mode.
      *
-     * @param dateCondition The predicate for the deadline date.
-     * @return Formatted string tree.
+     * @param condition The date predicate.
+     * @return Formatted tree string.
      */
-    public String searchTime(Predicate<LocalDate> dateCondition) {
-        return executeSearch(
-                task -> task.getDeadline() != null && dateCondition.test(task.getDeadline()),
+    public String searchTime(Predicate<LocalDate> condition) {
+        return executeSearch(t -> t.getDeadline() != null && condition.test(t.getDeadline()),
                 TaskSearcher.SearchMode.LAX);
     }
 
     /**
-     * Identifies duplicate tasks based on name and deadline.
+     * Finds duplicate tasks based on name and deadline.
      *
-     * @return Formatted string of duplicate IDs.
+     * @return String listing duplicates.
      */
     public String duplicates() {
         return DuplicatesFinder.findDuplicates(this.allTasks);
     }
 
-    // Methods for List
+    // --- LIST OPERATIONS ---
 
     /**
      * Creates a new task list.
@@ -256,27 +251,23 @@ public class Procrastinot {
      * @throws SystemException If list name already exists.
      */
     public String createList(String name) throws SystemException {
-        // validate the uniqueness of list
         if (userLists.containsKey(name)) {
             throw new SystemException(SystemMessage.LIST_EXISTS.format(name));
         }
-
-        TaskList newList = new TaskList(name);
-        userLists.put(name, newList);
+        userLists.put(name, new TaskList(name));
         return SystemMessage.SUCCESS_CREATE_LIST.format(name);
     }
 
     /**
-     * Adds a tag to a task list.
+     * Adds a tag to a list.
      *
      * @param name The name of the list.
      * @param tag  The tag to add.
      * @return Success message string.
-     * @throws SystemException If list not found or tag exists.
+     * @throws SystemException If list not found.
      */
     public String tagList(String name, String tag) throws SystemException {
-        TaskList list = getList(name);
-        list.addNewTag(tag);
+        getList(name).addNewTag(tag);
         return SystemMessage.SUCCESS_TAG.format(name, tag);
     }
 
@@ -286,7 +277,7 @@ public class Procrastinot {
      * @param id   The ID of the task.
      * @param name The name of the list.
      * @return Success message string.
-     * @throws SystemException If task/list not found.
+     * @throws SystemException If task or list not found.
      */
     public String assignToList(int id, String name) throws SystemException {
         Task task = getTask(id);
@@ -296,17 +287,15 @@ public class Procrastinot {
     }
 
     /**
-     * Shows all tasks in a specific list.
-     * 
-     * @param name The name of list.
-     * @return Success message string.
+     * Shows all active tasks in a list.
+     *
+     * @param name The name of the list.
+     * @return Formatted tree string.
      * @throws SystemException If list not found.
      */
     public String showList(String name) throws SystemException {
-        List<Task> taskInList = getList(name).getTasks();
-
         List<Task> activeTasks = new ArrayList<>();
-        for (Task task : taskInList) {
+        for (Task task : getList(name).getTasks()) {
             if (!task.isDeleted()) {
                 activeTasks.add(task);
             }
@@ -314,13 +303,14 @@ public class Procrastinot {
         return TaskFormatter.formatTree(activeTasks, task -> true);
     }
 
-    // --- HELPER METHODS ---
+    // --- HELPERS ---
+
     /**
      * Retrieves a task by ID.
      *
      * @param id The task ID.
      * @return The task object.
-     * @throws SystemException If not found.
+     * @throws SystemException If task not found.
      */
     private Task getTask(int id) throws SystemException {
         Task task = allTasks.get(id);
@@ -335,7 +325,7 @@ public class Procrastinot {
      *
      * @param name The list name.
      * @return The TaskList object.
-     * @throws SystemException If not found.
+     * @throws SystemException If list not found.
      */
     private TaskList getList(String name) throws SystemException {
         TaskList list = userLists.get(name);
@@ -346,27 +336,32 @@ public class Procrastinot {
     }
 
     /**
-     * Helper method to execute search and format results.
+     * Executes a search and formats the result.
      *
-     * @param criteria The condition to find tasks.
-     * @param mode     The search mode (STRICT or LAX).
-     * @return The formatted string output.
+     * @param criteria The filtering criteria.
+     * @param mode     The search mode (STRICT/LAX).
+     * @return Formatted result string.
      */
     private String executeSearch(Predicate<Task> criteria, TaskSearcher.SearchMode mode) {
-        // 1. Create the smart visibility filter
         Predicate<Task> visibilityFilter = TaskSearcher.createVisibilityFilter(allTasks, criteria, mode);
-
-        // 2. Collect all visible tasks
         List<Task> visibleTasks = new ArrayList<>();
         for (Task task : allTasks.values()) {
             if (!task.isDeleted() && visibilityFilter.test(task)) {
                 visibleTasks.add(task);
             }
         }
+        return TaskFormatter.formatTree(TaskUtils.filterRoots(visibleTasks), visibilityFilter);
+    }
 
-        // 3. Filter roots and format
-        // We pass 'visibilityFilter' as the childCondition to TaskFormatter
-        List<Task> roots = TaskUtils.filterRoots(visibleTasks);
-        return TaskFormatter.formatTree(roots, visibilityFilter);
+    /**
+     * Moves a task to the end of all user lists containing it.
+     * Used during restore to ensure correct display order.
+     *
+     * @param task The task to move.
+     */
+    private void moveTaskToEndOfUserLists(Task task) {
+        for (TaskList list : userLists.values()) {
+            list.moveTaskToEnd(task);
+        }
     }
 }
