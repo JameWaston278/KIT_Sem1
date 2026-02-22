@@ -1,0 +1,38 @@
+Seed: -4022738
+
+Shuffling players deck => [Daisy Farmer, Threshing Maid, Shield Farmer, Milk Cow Farmer, Silo Operator, Egg-laying Wool-Milk-Pig Farmer, Beetroot Farmer, ...]
+Shuffling AI deck => [Shield Farmer, Livestock Sorceress, Fence Farmer, Pig Farmer, Threshing Maid, Seed Farmer, Daisy Farmer, Titan Tractor Farmer, ...]
+
+=== First AI Turn ===
+Scores for Movement of Bauernkönig: Right: -1, Down: -1, Left: -1, In-place: 0
+ => no RNG needed
+Scores for Selection of Unit Placement: C7: -7, E7: -7, C6: -5, D6: -5, E6: -5
+ => Random::nextInt(1, 4) => 1 => E6
+Scores for Selection of Unit to Place: 
+	1-800 (Shield Farmer),
+	801-2300 (Livestock Sorceress),
+	2301-2600 (Fence Farmer),
+	2601-3800 (Pig Farmer),
+	3801-5100 (Threshing Maid)
+ => Random::nextInt(1, 5101) => 1263 => Livestock Sorceress
+Scores for Movement of E6: Up: 60 (1-60), Right: 60 (61-120), Down: 40 (121-160), Left: 40 (161-200), Block: 12 (201-212), In-place: 15 (213-227)
+ => Random::nextInt(1, 228) => 3 => Up
+
+=== Second AI Turn ===
+Scores for Movement of Bauernkönig: Right: -3, Down: -2, Left: -1, In-place: 1
+ => no RNG needed
+Scores for Selection of Unit Placement: C7: -6, C6: -4, D6: -2, E6: -5
+ => no RNG needed
+Scores for Selection of Unit to Place:
+	1-800 (Shield Farmer),
+	801-1100 (Fence Farmer),
+	1101-2300 (Pig Farmer),
+	2301-3600 (Threshing Maid),
+	3601-6100 (Seed Farmer)
+ => Random::nextInt(1, 6101) => 5181 => Seed Farmer
+Scores for Movement of E7: Right: 60 (1-60), Down: 40 (61-100), Block: 12 (101-112), In-place: 15 (113-127)
+Scores for Movement of D6: Right: 40 (1-40), Down: 2000 (41-2040), Left: 40 (2041-2080), Block: 23 (2081-2103), In-place: 25 (2104-2128)
+=> D6 moves first
+=> Random::nextInt(1, 2129) => 1254 => Down
+=> E7's scores dont change
+=> Random::nextInt(1, 128) => 123 => In-place
