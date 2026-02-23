@@ -41,7 +41,7 @@ public final class DuplicatesFinder {
             }
         }
 
-        if (duplicateIds.isEmpty()) {
+        if (duplicateIds == null || duplicateIds.isEmpty()) {
             return SystemMessage.TASK_DUPLICATE.format(0);
         }
 

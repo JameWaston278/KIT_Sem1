@@ -152,7 +152,16 @@ public class Procrastinot {
 
         if (parent != null) {
             if (parent.isDeleted()) {
-                task.detachFromParent();
+                for (TaskList list : userLists.values()) {
+                    if (TaskUtils.hasAncestorInList(task, list.getTasks())) {
+                        if (!list.getTasks().contains(task)) {
+                            try {
+                                list.addNewTask(task);
+                            } catch (SystemException ignored) {
+                            }
+                        }
+                    }
+                }
             } else {
                 parent.moveSubtaskToEnd(task);
             }

@@ -8,10 +8,15 @@ import exceptions.GameLogicException;
  * can be placed and moved.
  * It provides methods to parse coordinates, get and place units, and check if
  * positions are occupied.
+ * 
+ * @author udqch
  */
 public class Board {
     private final Unit[][] board;
 
+    /**
+     * Constructor for the Board class, which initializes an empty 7x7 grid.
+     */
     public Board() {
         this.board = new Unit[7][7];
     }
@@ -65,7 +70,7 @@ public class Board {
      * @param posString The position in string format (e.g., "A1", "B2").
      * @throws GameLogicException If the coordinates are invalid.
      */
-    public void placeUnit(Unit unit, String posString) throws GameLogicException {
+    public void placeUnitAt(Unit unit, String posString) throws GameLogicException {
         int[] indices = parseCoordinates(posString);
         int x = indices[0];
         int y = indices[1];
@@ -78,7 +83,7 @@ public class Board {
      * @param posString The position in string format (e.g., "A1", "B2").
      * @throws GameLogicException If the coordinates are invalid.
      */
-    public void removeUnit(String posString) throws GameLogicException {
+    public void removeUnitAt(String posString) throws GameLogicException {
         int[] indices = parseCoordinates(posString);
         int x = indices[0];
         int y = indices[1];
@@ -109,7 +114,7 @@ public class Board {
         if (unit == null) {
             throw new GameLogicException(ErrorMessage.NO_UNIT_AT_POSITION.format(fromPos));
         }
-        placeUnit(unit, toPos);
-        removeUnit(fromPos);
+        placeUnitAt(unit, toPos);
+        removeUnitAt(fromPos);
     }
 }

@@ -63,4 +63,10 @@ public class Game {
             throw new GameLogicException(ErrorMessage.GAME_OVER.format(player.getName()));
         }
     }
+
+    // --- GETTERS & SETTERS ---
+
+    public Board getBoard() {
+        return this.board;
+    }
 }
