@@ -4,7 +4,9 @@ import exceptions.GameLogicException;
 import model.Game;
 import model.Team;
 import model.Unit;
-import utils.Constants;
+import utils.DisplayFormat;
+import utils.EventLog;
+import utils.StringConstants;
 
 /**
  * The Duel class encapsulates the logic of a duel between an attacking unit and
@@ -52,23 +54,25 @@ public class Duel {
     public void resolveDuel() throws GameLogicException {
 
         // Display notification of the attack.
-        String defName = (this.defender.isHidden()) ? Constants.HIDDEN_VALUE : this.defender.getName();
-        String atkStats = String.format(Constants.STATS_DISPLAY, this.attacker.getAtk(), this.attacker.getDef());
-        String defStats = (this.defender.isKing()) ? Constants.EMPTY
-                : String.format(Constants.STATS_DISPLAY, this.defender.getAtk(), this.defender.getDef());
+        String hiddenSymbol = DisplayFormat.HIDDEN_SYMBOL.getTemplate();
+        String defName = (this.defender.isHidden()) ? hiddenSymbol : this.defender.getName();
+        String atkStats = String.format(hiddenSymbol, this.attacker.getAtk(), this.attacker.getDef());
+        var defStats = (this.defender.isKing()) ? StringConstants.EMPTY
+                : String.format(DisplayFormat.STATS.getTemplate(), this.defender.getAtk(), this.defender.getDef());
+
         System.out.println(
-                String.format(Constants.ATTACK_EVENT, this.attacker.getName(), atkStats, defName, defStats,
+                EventLog.ATTACK.format(this.attacker.getName(), atkStats, defName, defStats,
                         this.defPos));
 
         // Reveal both units if they are hidden.
         if (this.attacker.isHidden()) {
             this.attacker.faceUp();
             System.out.println(
-                    String.format(Constants.FLIP_TEMPLATE, this.attacker.getName(), atkStats, this.defPos));
+                    EventLog.FLIP.format(this.attacker.getName(), atkStats, this.defPos));
         }
         if (this.defender.isHidden()) {
             this.defender.faceUp();
-            System.out.println(String.format(Constants.FLIP_TEMPLATE, defName, defStats, this.atkPos));
+            System.out.println(EventLog.FLIP.format(defName, defStats, this.atkPos));
         }
 
         // Resolve the duel by comparing ATK and DEF values.
@@ -84,14 +88,14 @@ public class Duel {
         // If the attacker wins, move the attacking unit into the defender's position.
         if (duelResult) {
             this.game.getBoard().moveUnit(this.atkPos, this.defPos);
-            System.out.println(String.format(Constants.MOVE_EVENT, this.attacker.getName(), this.defPos));
+            System.out.println(EventLog.MOVE.format(this.attacker.getName(), this.defPos));
         }
     }
 
     private boolean attackKing() {
         int damage = this.attacker.getAtk();
         this.defTeam.takeDamage(damage);
-        System.out.println(String.format(Constants.TAKE_DAMAGE, this.defTeam.getName(), damage));
+        System.out.println(EventLog.DAMAGE_TAKEN.format(this.defTeam.getName(), damage));
         return false;
     }
 
@@ -102,7 +106,7 @@ public class Duel {
         } else if (this.attacker.getAtk() < this.defender.getDef()) {
             int damage = this.defender.getDef() - this.attacker.getAtk();
             atkTeam.takeDamage(damage);
-            System.out.println(String.format(Constants.TAKE_DAMAGE, this.atkTeam.getName(), damage));
+            System.out.println(EventLog.DAMAGE_TAKEN.format(this.atkTeam.getName(), damage));
             return false; // Defender wins, attacker does not move.
         } else {
             return false; // No one wins if ATK and DEF are equal.
@@ -117,13 +121,13 @@ public class Duel {
             // Attacker wins, defender is eliminated.
             defTeam.takeDamage(diff);
             this.eliminateUnit(this.defender);
-            System.out.println(String.format(Constants.TAKE_DAMAGE, this.defTeam.getName(), diff));
+            System.out.println(EventLog.DAMAGE_TAKEN.format(this.defTeam.getName(), diff));
             return true; // Attacker wins and moves into the defender's position.
         } else if (this.attacker.getAtk() < this.defender.getAtk()) {
             // Defender wins, attacker is eliminated.
             atkTeam.takeDamage(diff);
             this.eliminateUnit(this.attacker);
-            System.out.println(String.format(Constants.TAKE_DAMAGE, this.atkTeam.getName(), diff));
+            System.out.println(EventLog.DAMAGE_TAKEN.format(this.atkTeam.getName(), diff));
             return false; // Defender wins, attacker does not move.
         } else {
             // ATK values are equal, both units are eliminated.
@@ -135,6 +139,6 @@ public class Duel {
 
     private void eliminateUnit(Unit unit) throws GameLogicException {
         game.getBoard().removeUnitAt(unit.getPosition());
-        System.out.println(String.format(Constants.ELIMINATED_EVENT, unit.getName()));
+        System.out.println(EventLog.ELIMINATION.format(unit.getName()));
     }
 }

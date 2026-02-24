@@ -10,7 +10,7 @@ public enum ErrorMessage {
     OUT_OF_BOUNDS("Coordinates out of bounds: %s."),
     NO_UNIT_AT_POSITION("No unit at position %s."),
 
-    GAME_OVER("Game over. %s wins!"),
+    GAME_OVER("Game over. %s wins!");
 
     private final String text;
     private static final String ERROR_PREFIX = "Error: ";

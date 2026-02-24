@@ -2,7 +2,8 @@ package model;
 
 import exceptions.ErrorMessage;
 import exceptions.GameLogicException;
-import utils.Constants;
+import utils.DisplayFormat;
+import utils.StringConstants;
 
 /**
  * The Unit class represents a game piece in the board game. Each unit has a
@@ -80,11 +81,12 @@ public class Unit {
      * @return a formatted string representation of the unit's information
      */
     public String getInfo() {
-        String displayName = (this.isHidden) ? Constants.HIDDEN_VALUE : this.getName();
-        String displayOwner = (this.isHidden) ? Constants.HIDDEN_VALUE : this.owner.getName();
-        String displayAtk = (this.isHidden) ? Constants.HIDDEN_VALUE : String.valueOf(this.atk);
-        String displayDef = (this.isHidden) ? Constants.HIDDEN_VALUE : String.valueOf(this.def);
-        return String.format(Constants.UNIT_DISPLAY_TEMPLATE, displayName, displayOwner, displayAtk, displayDef);
+        String hiddenSymbol = DisplayFormat.HIDDEN_SYMBOL.getTemplate();
+        String displayName = (this.isHidden) ? hiddenSymbol : this.getName();
+        String displayOwner = (this.isHidden) ? hiddenSymbol : this.owner.getName();
+        String displayAtk = (this.isHidden) ? hiddenSymbol : String.valueOf(this.atk);
+        String displayDef = (this.isHidden) ? hiddenSymbol : String.valueOf(this.def);
+        return DisplayFormat.UNIT_INFO.format(displayName, displayOwner, displayAtk, displayDef);
     }
 
     // --- GETTERS & SETTERS ---
@@ -144,7 +146,7 @@ public class Unit {
      * @return the name of the unit
      */
     public String getName() {
-        return this.qualifier + Constants.WHITESPACE + this.role;
+        return this.qualifier + StringConstants.SPACE + this.role;
     }
 
     /**
