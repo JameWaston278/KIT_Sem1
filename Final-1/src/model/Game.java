@@ -40,8 +40,8 @@ public class Game {
         // Place the Kings on the board
         King playerKing = new King(player);
         King enemyKing = new King(enemy);
-        board.placeUnit(playerKing, "D1");
-        board.placeUnit(enemyKing, "D7");
+        board.placeUnitAt(playerKing, "D1");
+        board.placeUnitAt(enemyKing, "D7");
 
         this.currentTurn = player; // Player starts first
     }

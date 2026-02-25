@@ -2,7 +2,7 @@ package model;
 
 import exceptions.ErrorMessage;
 import exceptions.GameLogicException;
-import utils.Constants;
+import utils.DisplayFormat;
 
 /**
  * The King class represents the special King unit in the game. The King has
@@ -55,7 +55,7 @@ public class King extends Unit {
     @Override
     public String getInfo() {
         // The King return a special display string that only contains the team's name.
-        return String.format(Constants.KING_DISPLAY_TEMPLATE, this.getOwner().getName());
+        return DisplayFormat.KING_INFO.format(getOwner().getName());
     }
 
     @Override

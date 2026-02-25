@@ -196,6 +196,16 @@ public class Unit {
     }
 
     /**
+     * Sets the unit's hidden status.
+     * 
+     * @param hidden the new hidden status to assign to the unit (true to hide,
+     *               false to reveal)
+     */
+    public void setHidden(boolean hidden) {
+        this.isHidden = hidden;
+    }
+
+    /**
      * Reveals the unit by setting its hidden status to false. Once a unit is
      * revealed, its true stats and information will be displayed in game events
      * and when viewing the unit's info.
