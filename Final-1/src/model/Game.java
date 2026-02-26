@@ -7,6 +7,9 @@ import exceptions.ErrorMessage;
 import exceptions.GameLogicException;
 
 public class Game {
+    private static final Position PLAYER_KING_INITIAL_POSITION = new Position(3, 0);
+    private static final Position ENEMY_KING_INITIAL_POSITION = new Position(3, 6);
+
     private final Team player;
     private final Team enemy;
     private final Board board;
@@ -40,8 +43,8 @@ public class Game {
         // Place the Kings on the board
         King playerKing = new King(player);
         King enemyKing = new King(enemy);
-        board.placeUnitAt(playerKing, "D1");
-        board.placeUnitAt(enemyKing, "D7");
+        board.placeUnitAt(playerKing, PLAYER_KING_INITIAL_POSITION);
+        board.placeUnitAt(enemyKing, ENEMY_KING_INITIAL_POSITION);
 
         this.currentTurn = player; // Player starts first
     }

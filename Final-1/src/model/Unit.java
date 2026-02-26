@@ -19,7 +19,7 @@ public class Unit {
     private final int def;
     private final Team owner;
 
-    private String position; // The current position of the unit on the board (e.g., "A1", "B2")
+    private Position position; // The current position of the unit on the board (e.g., "A1", "B2")
     private boolean isHidden;
     private boolean isBlocking;
     private boolean hasMoved;
@@ -166,7 +166,7 @@ public class Unit {
      * @return the current position of the unit on the board (e.g., "A1", "B2"), or
      *         null if the unit is not currently on the board
      */
-    public String getPosition() {
+    public Position getPosition() {
         return this.position;
     }
 
@@ -175,15 +175,15 @@ public class Unit {
      * when the unit is placed on the board or moved to a new location. If an empty
      * or null value is provided, the position is cleared (set to null).
      * 
-     * @param position the new position to assign to the unit (e.g., "A1", "B2"), or
-     *                 null/empty to clear the position
+     * @param newPos the new position to assign to the unit (e.g., "A1", "B2"), or
+     *               null/empty to clear the position
      */
-    public void setPosition(String position) {
-        if (position == null || position.isEmpty()) {
+    public void setPosition(Position newPos) {
+        if (newPos == null) {
             this.position = null; // Clear the position if an empty or null value is provided
             return;
         }
-        this.position = position;
+        this.position = newPos;
     }
 
     /**

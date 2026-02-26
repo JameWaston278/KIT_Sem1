@@ -5,6 +5,7 @@ import java.util.List;
 
 import exceptions.GameLogicException;
 import model.Board;
+import model.Position;
 import model.Team;
 import model.Unit;
 
@@ -19,7 +20,7 @@ import model.Unit;
 public class KingEvaluator {
 
     // Possible moves include moving up, down, left, right, or staying in place
-    private static final int[][] POSSIBLE_DIRECTIONS = { { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 }, { 0, 0 } };
+    private static final int[][] POSSIBLE_DIRECTIONS = { { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 }, { 0, 0 } };
 
     private final Board board;
     private final Team fellow;
@@ -50,11 +51,11 @@ public class KingEvaluator {
      *                            (e.g.,
      *                            invalid position).
      */
-    public List<ScoredActions<String>> scoreMove(String kingPos) throws GameLogicException {
+    public List<ScoredActions<Position>> scoreMove(Position kingPos) throws GameLogicException {
         Unit king = board.getUnitAt(kingPos);
-        List<String> possibleMoves = board.getPossibleMoves(kingPos, POSSIBLE_DIRECTIONS);
-        List<ScoredActions<String>> scoredMoves = new ArrayList<>();
-        for (String move : possibleMoves) {
+        List<Position> possibleMoves = kingPos.getNeighbors(POSSIBLE_DIRECTIONS);
+        List<ScoredActions<Position>> scoredMoves = new ArrayList<>();
+        for (Position move : possibleMoves) {
             if (board.isOwnedBy(move, enemy)) {
                 continue; // Skip moves that would move onto an enemy unit
             }

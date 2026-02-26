@@ -2,6 +2,7 @@ package logic;
 
 import exceptions.GameLogicException;
 import model.Game;
+import model.Position;
 import model.Team;
 import model.Unit;
 import utils.DisplayFormat;
@@ -22,8 +23,8 @@ public class Duel {
     private final Unit defender;
     private final Team atkTeam;
     private final Team defTeam;
-    private final String atkPos;
-    private final String defPos;
+    private final Position atkPos;
+    private final Position defPos;
 
     /**
      * Constructor for the Duel class.
