@@ -11,7 +11,8 @@ public enum DisplayFormat {
     UNIT_INFO("%s (Team %s)%nATK: %s%nDEF: %s"),
     KING_INFO("%s's Farmer King"),
     STATS("(%d/%d)"),
-    HIDDEN_SYMBOL("???");
+    HIDDEN_SYMBOL("???"),
+    COORDINATES("[%d, %d]");
 
     private final String template;
 
