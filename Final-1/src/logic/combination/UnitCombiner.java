@@ -14,11 +14,15 @@ import utils.StringConstants;
  * 
  * @author udqch
  */
-public class UnitCombiner {
-    private final List<CombineRule> rules = List.of(
+public final class UnitCombiner {
+    private static final List<CombineRule> RULES = List.of(
             new SymbiosisRule(),
             new LikeMindedRule(),
             new PrimeRule());
+
+    private UnitCombiner() {
+        // Private constructor to prevent instantiation
+    }
 
     /**
      * Combines two units according to the defined combination rules. If the units
@@ -35,7 +39,7 @@ public class UnitCombiner {
         }
 
         CombineStats finalStats = null;
-        for (CombineRule rule : new UnitCombiner().rules) {
+        for (CombineRule rule : RULES) {
             finalStats = rule.check(a, b);
             if (finalStats != null) {
                 break; // Stop checking further rules if a valid combination is found

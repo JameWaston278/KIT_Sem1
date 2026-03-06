@@ -56,16 +56,12 @@ public class KingEvaluator {
         List<Position> possibleMoves = kingPos.getNeighbors(POSSIBLE_DIRECTIONS);
         List<ScoredActions<Position>> scoredMoves = new ArrayList<>();
         for (Position move : possibleMoves) {
-            if (board.isOwnedBy(move, enemy)) {
-                continue; // Skip moves that would move onto an enemy unit
-            }
-
             int fellows = board.countUnitsAround(move, true, fellow, king);
-            int enemies = board.countUnitsAround(move, true, enemy, king);
+            int enemies = board.countUnitsAround(move, true, enemy, null);
             int distance = (move.equals(kingPos)) ? 0 : 1; // Staying in place has distance 0, moving has distance 1
-            int fellowPresent = (board.isOwnedBy(move, fellow)) ? 1 : 0; // 1 if there's a fellow unit on the move
-                                                                         // position, 0 otherwise
-            int score = fellows - 2 * enemies - distance + 3 * fellowPresent;
+            // 1 if there's a fellow unit on the move position, 0 otherwise
+            int fellowPresent = ((board.isOwnedBy(move, fellow)) && !move.equals(kingPos)) ? 1 : 0;
+            int score = fellows - 2 * enemies - distance - 3 * fellowPresent;
             scoredMoves.add(new ScoredActions<>(move, score));
         }
         return scoredMoves;

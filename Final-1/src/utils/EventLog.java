@@ -11,11 +11,17 @@ package utils;
  */
 public enum EventLog {
 
+    /** Template for logging attack events. */
     ATTACK("%s %s attacks %s%s on %s!%n"),
+    /** Template for logging flip events. */
     FLIP("%s %s was flipped on %s!%n"),
+    /** Template for logging move events. */
     MOVE("%s moves to %s.%n"),
+    /** Template for logging damage taken events. */
     DAMAGE_TAKEN("%s takes %d damage!%n"),
+    /** Template for logging elimination events. */
     ELIMINATION("%s was eliminated!%n"),
+    /** Template for logging combination events. */
     COMBINATION("%s and %s on %s join forces!%n");
 
     private final String template;

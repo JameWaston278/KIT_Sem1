@@ -32,7 +32,6 @@ public class Team {
     private final List<Unit> deck;
     private final List<Unit> hand;
     private final List<Unit> activeUnits;
-    private int boardCount;
     private boolean isDefeated;
 
     /**
@@ -49,7 +48,6 @@ public class Team {
         this.deck = new ArrayList<>(deck);
         this.hand = new ArrayList<>();
         this.activeUnits = new ArrayList<>();
-        this.boardCount = 0;
         this.isDefeated = false;
     }
 
@@ -186,25 +184,8 @@ public class Team {
      * @return An unmodifiable list of units currently active on the board for the
      *         team.
      */
-    public int getBoardCount() {
-        return boardCount;
-    }
-
-    /**
-     * Increases the count of active units on the board for the team by one.
-     */
-    public void increaseBoardCount() {
-        this.boardCount++;
-    }
-
-    /**
-     * Decreases the count of active units on the board for the team by one,
-     * ensuring that the count does not go below zero.
-     */
-    public void decreaseBoardCount() {
-        if (this.boardCount > 0) {
-            this.boardCount--;
-        }
+    public List<Unit> getActiveUnits() {
+        return Collections.unmodifiableList(activeUnits);
     }
 
     /**

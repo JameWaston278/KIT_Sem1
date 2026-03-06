@@ -1,5 +1,8 @@
 package model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import exceptions.ErrorMessage;
 import exceptions.GameLogicException;
 
@@ -12,12 +15,16 @@ import exceptions.GameLogicException;
  * @author udqch
  */
 public class Board {
+    /** The size of the board (7x7). */
     public static final int BOARD_SIZE = 7;
+    // Direction vectors for counting units around a position
     private static final int[][] EIGHT_DIRECTIONS = {
             { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 }, { 1, 0 }, { 1, 1 } };
+    // Direction vectors for counting units in orthogonal directions only
     private static final int[][] FOUR_DIRECTIONS = { { -1, 0 }, { 0, -1 }, { 0, 1 }, { 1, 0 } };
 
     private final Unit[][] board;
+    private final Map<Team, Position> kingPositions = new HashMap<>(); // Map to track the positions of each team's King
 
     /**
      * Constructor for the Board class, which initializes an empty 7x7 grid.
@@ -48,6 +55,10 @@ public class Board {
      */
     public void placeUnitAt(Unit unit, Position pos) throws GameLogicException {
         this.board[pos.col()][pos.row()] = unit;
+
+        if (unit.isKing()) {
+            kingPositions.put(unit.getOwner(), pos); // Update the King's position in the map
+        }
     }
 
     /**
@@ -73,11 +84,18 @@ public class Board {
         if (unit == null) {
             throw new GameLogicException(ErrorMessage.NO_UNIT_AT_POSITION.format(fromPos));
         }
+        if (fromPos.equals(toPos)) {
+            return; // No movement needed if the positions are the same
+        }
         placeUnitAt(unit, toPos);
         removeUnitAt(fromPos);
+
+        if (unit.isKing()) {
+            kingPositions.put(unit.getOwner(), toPos); // Update the King's position in the map
+        }
     }
 
-    // --- CHECKS ---
+    // --- CHECKERS ---
 
     /**
      * Check if the specified position on the board is occupied by a unit.
@@ -103,6 +121,20 @@ public class Board {
     public boolean isOwnedBy(Position pos, Team team) throws GameLogicException {
         Unit unit = getUnitAt(pos);
         return unit != null && unit.getOwner() == team;
+    }
+
+    /**
+     * Check if the specified position is within the bounds of the board.
+     * 
+     * @param pos The position to check.
+     * @return True if the position is valid, false otherwise.
+     * @throws GameLogicException If the coordinates are invalid.
+     */
+    public boolean isValid(Position pos) throws GameLogicException {
+        if (pos.col() < 0 || pos.col() >= BOARD_SIZE || pos.row() < 0 || pos.row() >= BOARD_SIZE) {
+            throw new GameLogicException(ErrorMessage.OUT_OF_BOUNDS.format(pos));
+        }
+        return true;
     }
 
     // --- COUNTERS ---
@@ -140,5 +172,18 @@ public class Board {
             }
         }
         return count;
+    }
+
+    // --- GETTERS ---
+
+    /**
+     * Returns the position of the King unit for the specified team.
+     * 
+     * @param team The team whose King's position is to be retrieved.
+     * @return The position of the King's unit for the specified team, or null if
+     *         not found.
+     */
+    public Position getKingPosition(Team team) {
+        return kingPositions.get(team);
     }
 }

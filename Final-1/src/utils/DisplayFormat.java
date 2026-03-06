@@ -8,10 +8,26 @@ package utils;
  */
 public enum DisplayFormat {
 
+    /**
+     * Template for displaying unit information, including name, team, attack, and
+     * defense stats.
+     */
     UNIT_INFO("%s (Team %s)%nATK: %s%nDEF: %s"),
+    /**
+     * Template for displaying king information.
+     */
     KING_INFO("%s's Farmer King"),
+    /**
+     * Template for displaying stats in a ratio format (e.g., "3/5").
+     */
     STATS("(%d/%d)"),
+    /**
+     * Template for displaying hidden information, represented by "???".
+     */
     HIDDEN_SYMBOL("???"),
+    /**
+     * Template for displaying coordinates in a specific format (e.g., "[3, 4]").
+     */
     COORDINATES("[%d, %d]");
 
     private final String template;
