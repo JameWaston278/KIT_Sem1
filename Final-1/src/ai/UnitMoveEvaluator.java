@@ -23,8 +23,8 @@ public class UnitMoveEvaluator {
 
     private static final int[][] POSSIBLE_DIRECTIONS = { { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 } };
     private static final ActionType[] DIRECTION_TYPES = {
-        ActionType.MOVE_UP, ActionType.MOVE_RIGHT,
-        ActionType.MOVE_DOWN, ActionType.MOVE_LEFT };
+            ActionType.MOVE_UP, ActionType.MOVE_RIGHT,
+            ActionType.MOVE_DOWN, ActionType.MOVE_LEFT };
 
     private final Board board;
     private final Team fellow;
@@ -167,7 +167,7 @@ public class UnitMoveEvaluator {
      * @return The score for blocking.
      * @throws GameLogicException If there is an error accessing the board state.
      */
-    private int calculateBlockScore(Unit unit, Position currentPos) throws GameLogicException {
+    private int calculateBlockScore(Unit unit, Position currentPos) {
         int atkStar = getAtkStar(currentPos, enemy);
         return Math.max(1, (unit.getDef() - atkStar) / 100);
     }
@@ -182,7 +182,7 @@ public class UnitMoveEvaluator {
      * @return The score for staying in place.
      * @throws GameLogicException If there is an error accessing the board state.
      */
-    private int calculateEnplaceScore(Unit unit, Position currentPos) throws GameLogicException {
+    private int calculateEnplaceScore(Unit unit, Position currentPos) {
         int atkStar = getAtkStar(currentPos, enemy);
         return Math.max(0, (unit.getAtk() - atkStar) / 100);
     }
@@ -207,16 +207,12 @@ public class UnitMoveEvaluator {
             while (currentCol >= 0 && currentCol < Board.BOARD_SIZE
                     && currentRow >= 0 && currentRow < Board.BOARD_SIZE) {
                 Position checkPos = new Position(currentCol, currentRow);
-                try {
-                    Unit hitUnit = board.getUnitAt(checkPos);
-                    if (hitUnit != null) {
-                        if (hitUnit.getOwner().equals(enemy) && !hitUnit.isKing()) {
-                            maxAtk = Math.max(maxAtk, hitUnit.getAtk());
-                        }
-                        break; // Stop checking in this direction after hitting any unit
+                Unit hitUnit = board.getUnitAt(checkPos);
+                if (hitUnit != null) {
+                    if (hitUnit.getOwner().equals(enemy) && !hitUnit.isKing()) {
+                        maxAtk = Math.max(maxAtk, hitUnit.getAtk());
                     }
-                } catch (GameLogicException e) {
-                    break; // Out of bounds, stop checking in this direction
+                    break; // Stop checking in this direction after hitting any unit
                 }
                 currentCol += dir[0];
                 currentRow += dir[1];

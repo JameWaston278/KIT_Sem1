@@ -40,9 +40,8 @@ public class Board {
      * 
      * @param pos The position in string format (e.g., "A1", "B2").
      * @return The unit at the specified position, or null if the position is empty.
-     * @throws GameLogicException If the coordinates are invalid.
      */
-    public Unit getUnitAt(Position pos) throws GameLogicException {
+    public Unit getUnitAt(Position pos) {
         return this.board[pos.col()][pos.row()];
     }
 
@@ -51,9 +50,8 @@ public class Board {
      * 
      * @param unit The unit to place on the board.
      * @param pos  The position in string format (e.g., "A1", "B2").
-     * @throws GameLogicException If the coordinates are invalid.
      */
-    public void placeUnitAt(Unit unit, Position pos) throws GameLogicException {
+    public void placeUnitAt(Unit unit, Position pos) {
         this.board[pos.col()][pos.row()] = unit;
 
         if (unit.isKing()) {
@@ -65,9 +63,8 @@ public class Board {
      * Remove the unit at the specified position on the board.
      * 
      * @param pos The position in string format (e.g., "A1", "B2").
-     * @throws GameLogicException If the coordinates are invalid.
      */
-    public void removeUnitAt(Position pos) throws GameLogicException {
+    public void removeUnitAt(Position pos) {
         this.board[pos.col()][pos.row()] = null;
     }
 
@@ -102,9 +99,8 @@ public class Board {
      * 
      * @param pos The position in string format (e.g., "A1", "B2").
      * @return True if the position is occupied, false otherwise.
-     * @throws GameLogicException If the coordinates are invalid.
      */
-    public boolean isOccupied(Position pos) throws GameLogicException {
+    public boolean isOccupied(Position pos) {
         return getUnitAt(pos) != null;
     }
 
@@ -116,9 +112,8 @@ public class Board {
      * @param team The team to check against.
      * @return True if the position is occupied by a unit of the specified team,
      *         false otherwise.
-     * @throws GameLogicException If the coordinates are invalid.
      */
-    public boolean isOwnedBy(Position pos, Team team) throws GameLogicException {
+    public boolean isOwnedBy(Position pos, Team team) {
         Unit unit = getUnitAt(pos);
         return unit != null && unit.getOwner() == team;
     }
@@ -151,10 +146,8 @@ public class Board {
      *                        moved), or null to include all units.
      * @return The count of units around the specified position that match the
      *         criteria.
-     * @throws GameLogicException If the coordinates are invalid.
      */
-    public int countUnitsAround(Position pos, boolean eightDirections, Team targetTeam, Unit excludedUnit)
-            throws GameLogicException {
+    public int countUnitsAround(Position pos, boolean eightDirections, Team targetTeam, Unit excludedUnit) {
         int count = 0;
 
         // Define the directions to check based on the eightDirections flag

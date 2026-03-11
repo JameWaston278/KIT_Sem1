@@ -11,18 +11,36 @@ package utils;
  */
 public enum EventLog {
 
-    /** Template for logging attack events. */
-    ATTACK("%s %s attacks %s%s on %s!%n"),
-    /** Template for logging flip events. */
-    FLIP("%s %s was flipped on %s!%n"),
-    /** Template for logging move events. */
-    MOVE("%s moves to %s.%n"),
-    /** Template for logging damage taken events. */
-    DAMAGE_TAKEN("%s takes %d damage!%n"),
-    /** Template for logging elimination events. */
-    ELIMINATION("%s was eliminated!%n"),
-    /** Template for logging combination events. */
-    COMBINATION("%s and %s on %s join forces!%n");
+    // --- MOVE & DUEL ---
+    NO_LONGER_BLOCKS("%s no longer blocks."),
+    MOVES_TO("%s moves to %s."),
+
+    ATTACK("%s (%d/%d) attacks %s on %s!"),
+    ATTACK_WITH_DEF_STATS("%s (%d/%d) attacks %s (%d/%d) on %s!"),
+
+    FLIP("%s (%d/%d) was flipped on %s!"), //
+    ELIMINATED("%s was eliminated!"), //
+    DAMAGE("%s takes %d damage!"), //
+
+    // --- PLACE ---
+    PLACES("%s places %s on %s."), //
+
+    // --- COMBINE UNIT ---
+    JOIN_FORCES("%s and %s on %s join forces!"), //
+    COMBINE_SUCCESS("Success!"), //
+    COMBINE_FAIL("Union failed. %s was eliminated."), //
+
+    // --- BLOCK ---
+    BLOCKS("%s (%s) blocks!"), //
+
+    // --- STATUS/ WIN/ TURN ---
+    LP_DROPPED_TO_ZERO("%s's life points dropped to 0!"), //
+    DECK_EMPTY("%s has no cards left in the deck!"), //
+    WINS("%s wins!"), //
+    TURN_START("It is %s's turn!"), //
+
+    // --- YIELD ---
+    DISCARDED("%s discarded %s (%d/%d)."); //
 
     private final String template;
 
@@ -59,17 +77,5 @@ public enum EventLog {
      */
     public String format(Object... args) {
         return String.format(this.template, args);
-    }
-
-    /**
-     * Prints the formatted event log message to the console using the provided
-     * arguments.
-     * 
-     * @param args The arguments to be formatted into the template, which should
-     *             correspond to the placeholders defined in the template string for
-     *             this event type.
-     */
-    public void print(Object... args) {
-        System.out.printf(this.template, args);
     }
 }

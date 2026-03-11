@@ -53,9 +53,8 @@ public final class UnitCombiner {
         String newRole = b.getRole();
         UnitTemplate newTemplate = new UnitTemplate(newQualifier, newRole, finalStats.newAtk(), finalStats.newDef());
         Unit combinedUnit = new Unit(newTemplate, a.getOwner());
-        combinedUnit.setHidden(a.isHidden() || b.isHidden()); // The combined unit is hidden if either of the original
-                                                              // units is hidden
-        combinedUnit.setHasMoved(false);
+        combinedUnit.setHidden(a.isHidden() || b.isHidden());
+        // The combined unit is hidden if either of the original units is hidden
         return combinedUnit;
     }
 }

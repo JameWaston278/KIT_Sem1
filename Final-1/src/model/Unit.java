@@ -224,6 +224,16 @@ public class Unit {
     }
 
     /**
+     * Sets the unit's blocking status.
+     * 
+     * @param blocking the new blocking status to assign to the unit (true to block,
+     *                 false to not block)
+     */
+    public void setBlocking(boolean blocking) {
+        this.isBlocking = blocking;
+    }
+
+    /**
      * Checks if the unit has already moved this turn.
      * 
      * @return true if the unit has moved, false otherwise

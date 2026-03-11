@@ -32,7 +32,6 @@ public class Team {
     private final List<Unit> deck;
     private final List<Unit> hand;
     private final List<Unit> activeUnits;
-    private boolean isDefeated;
 
     /**
      * Constructor for the Team class, which initializes a team with a given name
@@ -48,7 +47,6 @@ public class Team {
         this.deck = new ArrayList<>(deck);
         this.hand = new ArrayList<>();
         this.activeUnits = new ArrayList<>();
-        this.isDefeated = false;
     }
 
     // --- LOGIC METHODS ---
@@ -69,11 +67,6 @@ public class Team {
      * empty, the team is marked as defeated.
      */
     public void drawCard() {
-        if (this.deck.isEmpty()) {
-            // No more cards to draw, player loses
-            this.isDefeated = true;
-            return;
-        }
         Unit drawnCard = this.deck.remove(0);
         this.hand.add(drawnCard);
     }
@@ -98,12 +91,8 @@ public class Team {
      * 
      * @param damage The amount of damage to be taken by the team.
      */
-    public void takeDamage(int damage) {
+    public void decreaseLp(int damage) {
         this.lp -= damage;
-        if (this.lp <= 0) {
-            this.lp = 0;
-            this.isDefeated = true;
-        }
     }
 
     // --- LOGIC METHODS FOR ON-BOARD UNITS ---
@@ -152,21 +141,22 @@ public class Team {
     }
 
     /**
-     * Gets the current life points (LP) of the team.
+     * Checks if the team is defeated by verifying if their life points (LP) have
+     * dropped to zero or below.
      * 
-     * @return The current LP of the team.
+     * @return True if the team is defeated, false otherwise.
      */
-    public int getLp() {
-        return lp;
+    public boolean isDefeated() {
+        return this.lp <= 0;
     }
 
     /**
-     * Gets the size of the team's deck (number of cards remaining).
+     * Checks if the team's deck is empty.
      * 
-     * @return The number of cards left in the team's deck.
+     * @return True if the deck is empty, false otherwise.
      */
-    public int getDeckSize() {
-        return deck.size();
+    public boolean isDeckEmpty() {
+        return deck.isEmpty();
     }
 
     /**
@@ -186,15 +176,5 @@ public class Team {
      */
     public List<Unit> getActiveUnits() {
         return Collections.unmodifiableList(activeUnits);
-    }
-
-    /**
-     * Checks if the team has been defeated, which occurs when their LP drops to
-     * zero or below, or if they have no more cards to draw.
-     * 
-     * @return True if the team is defeated, false otherwise.
-     */
-    public boolean isDefeated() {
-        return isDefeated;
     }
 }
