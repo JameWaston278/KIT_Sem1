@@ -131,6 +131,24 @@ public class Team {
     }
 
     /**
+     * Gets the current life points (LP) of the team.
+     * 
+     * @return The current LP of the team.
+     */
+    public int getLp() {
+        return lp;
+    }
+
+    /**
+     * Gets the current size of the team's deck.
+     * 
+     * @return The number of cards remaining in the team's deck.
+     */
+    public int getDeckSize() {
+        return deck.size();
+    }
+
+    /**
      * Checks if the team is defeated by verifying if their life points (LP) have
      * dropped to zero or below.
      * 

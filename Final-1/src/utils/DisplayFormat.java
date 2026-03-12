@@ -14,6 +14,11 @@ public enum DisplayFormat {
      */
     UNIT_INFO("%s (Team %s)%nATK: %s%nDEF: %s"),
     /**
+     * Template for displaying units in the player's hand, showing the index,
+     * name, attack, and defense stats.
+     */
+    UNIT_ON_HAND("[%d] %s (%d/%d)"),
+    /**
      * Template for displaying king information.
      */
     KING_INFO("%s's Farmer King"),

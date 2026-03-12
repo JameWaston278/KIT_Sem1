@@ -149,26 +149,32 @@ public class Game {
     }
 
     /**
-     * Handles the logic for placing a unit on the board. This method checks if the
-     * player has already placed a unit this turn, validates the target position,
-     * checks for valid hand indices, and manages the combination of units if the
-     * target position is occupied by a friendly unit. It also updates the game
-     * state and logs relevant events.
-     *
-     * @param team        The team placing the unit.
-     * @param handIndices The list of indices from the player's hand representing
-     *                    the units to be placed.
-     * @param position    The target position on the board where the unit(s) should
-     *                    be placed.
-     * @return A list of event log messages generated during this action.
-     * @throws GameLogicException If any validation fails during the placement
-     *                            process,
-     *                            such as invalid placement conditions or hand
-     *                            indices.
+     * Executes a flip action for the specified team at the given position. This
+     * method validates the flip action according to game rules and updates the
+     * unit's hidden status if the action is valid.
+     * 
+     * @param team The team performing the flip action.
+     * @param pos  The position of the unit that will be flipped.
+     * @return A list of event log messages generated during progress.
+     * @throws GameLogicException If the flip action is invalid according to game
+     *                            rules.
      */
-    public List<String> executePlace(Team team, List<Integer> handIndices, Position position)
-            throws GameLogicException {
-        return PlaceUnitHelper.placeUnit(this, team, handIndices, position);
+    public List<String> executeFlip(Team team, Position pos) throws GameLogicException {
+        List<String> logs = new ArrayList<>();
+        Unit unit = board.getUnitAt(pos);
+
+        if (unit == null || !unit.getOwner().equals(team)) {
+            throw new GameLogicException(ErrorMessage.INVALID_UNIT.format());
+        }
+
+        if (unit.hasMoved()) {
+            throw new GameLogicException(ErrorMessage.UNIT_ALREADY_MOVED.format());
+        }
+
+        unit.setHidden(!unit.isHidden());
+        unit.setHasMoved(true);
+        logs.add(EventLog.FLIP.format(unit.getName(), unit.getAtk(), unit.getDef(), pos.toString()));
+        return logs;
     }
 
     /**
@@ -198,6 +204,29 @@ public class Game {
         unit.setHasMoved(true);
         logs.add(EventLog.BLOCKS.format(team.getName(), unit.getName()));
         return logs;
+    }
+
+    /**
+     * Handles the logic for placing a unit on the board. This method checks if the
+     * player has already placed a unit this turn, validates the target position,
+     * checks for valid hand indices, and manages the combination of units if the
+     * target position is occupied by a friendly unit. It also updates the game
+     * state and logs relevant events.
+     *
+     * @param team        The team placing the unit.
+     * @param handIndices The list of indices from the player's hand representing
+     *                    the units to be placed.
+     * @param position    The target position on the board where the unit(s) should
+     *                    be placed.
+     * @return A list of event log messages generated during this action.
+     * @throws GameLogicException If any validation fails during the placement
+     *                            process,
+     *                            such as invalid placement conditions or hand
+     *                            indices.
+     */
+    public List<String> executePlace(Team team, List<Integer> handIndices, Position position)
+            throws GameLogicException {
+        return PlaceUnitHelper.placeUnit(this, team, handIndices, position);
     }
 
     /**
@@ -298,6 +327,16 @@ public class Game {
      */
     public void setHasPlaceUnitInTurn(boolean hasPlaceUnitInTurn) {
         this.hasPlaceUnitInTurn = hasPlaceUnitInTurn;
+    }
+
+    /**
+     * Returns whether the game is over. The game is considered over if a win
+     * condition has been met, such as one team being defeated.
+     * 
+     * @return True if the game is over, false otherwise.
+     */
+    public boolean isGameOver() {
+        return this.isGameOver;
     }
 
     /**

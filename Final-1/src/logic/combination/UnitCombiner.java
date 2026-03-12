@@ -4,7 +4,6 @@ import java.util.List;
 
 import model.Unit;
 import model.UnitTemplate;
-import utils.StringConstants;
 
 /**
  * A class responsible for combining two units according to specific combination
@@ -49,7 +48,7 @@ public final class UnitCombiner {
             return null; // No valid combination found
         }
 
-        String newQualifier = b.getQualifier() + StringConstants.SPACE + a.getQualifier();
+        String newQualifier = b.getQualifier() + " " + a.getQualifier();
         String newRole = b.getRole();
 
         // Create a new UnitTemplate for the combined unit

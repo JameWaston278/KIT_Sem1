@@ -3,7 +3,6 @@ package model;
 import exceptions.ErrorMessage;
 import exceptions.GameLogicException;
 import utils.DisplayFormat;
-import utils.StringConstants;
 
 /**
  * The Unit class represents a game piece in the board game. Each unit has a
@@ -146,7 +145,7 @@ public class Unit {
      * @return the name of the unit
      */
     public String getName() {
-        return this.qualifier + StringConstants.SPACE + this.role;
+        return this.qualifier + " " + this.role;
     }
 
     /**
