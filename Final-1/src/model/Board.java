@@ -5,6 +5,7 @@ import java.util.Map;
 
 import exceptions.ErrorMessage;
 import exceptions.GameLogicException;
+import utils.GameConstants;
 
 /**
  * The Board class represents the game board, which is a 7x7 grid where units
@@ -15,8 +16,6 @@ import exceptions.GameLogicException;
  * @author udqch
  */
 public class Board {
-    /** The size of the board (7x7). */
-    public static final int BOARD_SIZE = 7;
     // Direction vectors for counting units around a position
     private static final int[][] EIGHT_DIRECTIONS = {
             { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 }, { 1, 0 }, { 1, 1 } };
@@ -30,7 +29,7 @@ public class Board {
      * Constructor for the Board class, which initializes an empty 7x7 grid.
      */
     public Board() {
-        this.board = new Unit[BOARD_SIZE][BOARD_SIZE];
+        this.board = new Unit[GameConstants.BOARD_ROWS][GameConstants.BOARD_COLS];
     }
 
     // --- BOARD OPERATIONS ---
@@ -126,7 +125,8 @@ public class Board {
      * @throws GameLogicException If the coordinates are invalid.
      */
     public boolean isValid(Position pos) throws GameLogicException {
-        if (pos.col() < 0 || pos.col() >= BOARD_SIZE || pos.row() < 0 || pos.row() >= BOARD_SIZE) {
+        if (pos.col() < 0 || pos.col() >= GameConstants.BOARD_COLS || pos.row() < 0
+                || pos.row() >= GameConstants.BOARD_ROWS) {
             throw new GameLogicException(ErrorMessage.OUT_OF_BOUNDS.format(pos));
         }
         return true;
@@ -156,7 +156,7 @@ public class Board {
         for (int[] dir : directions) {
             int newCol = pos.col() + dir[0];
             int newRow = pos.row() + dir[1];
-            if (newCol >= 0 && newCol < BOARD_SIZE && newRow >= 0 && newRow < BOARD_SIZE) {
+            if (newCol >= 0 && newCol < GameConstants.BOARD_COLS && newRow >= 0 && newRow < GameConstants.BOARD_ROWS) {
                 Unit adjacentUnit = board[newCol][newRow];
                 if (adjacentUnit != null && adjacentUnit.getOwner() == targetTeam
                         && adjacentUnit != excludedUnit) {

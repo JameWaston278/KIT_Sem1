@@ -12,35 +12,77 @@ package utils;
 public enum EventLog {
 
     // --- MOVE & DUEL ---
+    /** Template for logging when a unit no longer blocks. */
     NO_LONGER_BLOCKS("%s no longer blocks."),
+    /** Template for logging when a unit moves to a new position. */
     MOVES_TO("%s moves to %s."),
 
+    /**
+     * Template for logging when a unit attacks another unit without showing
+     * defender's stats.
+     */
     ATTACK("%s (%d/%d) attacks %s on %s!"),
+    /**
+     * Template for logging when a unit attacks another unit while showing
+     * defender's stats.
+     */
     ATTACK_WITH_DEF_STATS("%s (%d/%d) attacks %s (%d/%d) on %s!"),
 
-    FLIP("%s (%d/%d) was flipped on %s!"), //
-    ELIMINATED("%s was eliminated!"), //
-    DAMAGE("%s takes %d damage!"), //
+    /**
+     * Template for logging when a unit is flipped.
+     */
+    FLIP("%s (%d/%d) was flipped on %s!"),
+    /**
+     * Template for logging when a unit is eliminated from the game.
+     */
+    ELIMINATED("%s was eliminated!"),
+    /**
+     * Template for logging when a unit takes damage, showing the amount of damage
+     * taken.
+     */
+    DAMAGE("%s takes %d damage!"),
 
     // --- PLACE ---
-    PLACES("%s places %s on %s."), //
+    /** Template for logging when a unit is placed on the board. */
+    PLACES("%s places %s on %s."),
 
     // --- COMBINE UNIT ---
-    JOIN_FORCES("%s and %s on %s join forces!"), //
-    COMBINE_SUCCESS("Success!"), //
-    COMBINE_FAIL("Union failed. %s was eliminated."), //
+    /**
+     * Template for logging when two units join forces to combine into a stronger
+     * unit.
+     */
+    JOIN_FORCES("%s and %s on %s join forces!"),
+    /**
+     * Template for logging when a combination of units is successful.
+     */
+    COMBINE_SUCCESS("Success!"),
+    /**
+     * Template for logging when a combination of units fails, resulting in one of
+     * the units being eliminated.
+     */
+    COMBINE_FAIL("Union failed. %s was eliminated."),
 
     // --- BLOCK ---
-    BLOCKS("%s (%s) blocks!"), //
+    /** Template for logging when a unit blocks an attack. */
+    BLOCKS("%s (%s) blocks!"),
 
     // --- STATUS/ WIN/ TURN ---
-    LP_DROPPED_TO_ZERO("%s's life points dropped to 0!"), //
-    DECK_EMPTY("%s has no cards left in the deck!"), //
-    WINS("%s wins!"), //
-    TURN_START("It is %s's turn!"), //
+    /** Template for logging when a player's life points drop to zero. */
+    LP_DROPPED_TO_ZERO("%s's life points dropped to 0!"),
+    /** Template for logging when a player has no cards left in their deck. */
+    DECK_EMPTY("%s has no cards left in the deck!"),
+    /** Template for logging when a player wins the game. */
+    WINS("%s wins!"),
+    /** Template for logging the start of a player's turn. */
+    TURN_START("It is %s's turn!"),
 
     // --- YIELD ---
-    DISCARDED("%s discarded %s (%d/%d)."); //
+    /**
+     * Template for logging when a player discards a card at the end of their turn,
+     * showing the card that was discarded and the current hand size after
+     * discarding.
+     */
+    DISCARDED("%s discarded %s (%d/%d).");
 
     private final String template;
 

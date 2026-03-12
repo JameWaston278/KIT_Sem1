@@ -6,6 +6,7 @@ import java.util.List;
 
 import exceptions.ErrorMessage;
 import exceptions.GameLogicException;
+import utils.GameConstants;
 
 /**
  * The Team class represents a player in the game, holding their name, life
@@ -16,17 +17,6 @@ import exceptions.GameLogicException;
  * @author udqch
  */
 public class Team {
-    // --- TEAM CONSTANTS ---
-
-    /**
-     * Initial life points (LP) for each team at the start of the game.
-     */
-    public static final int INITIAL_LIFE_POINT = 8000;
-    /**
-     * Initial number of cards drawn into the hand at the start of the game.
-     */
-    public static final int INITIAL_CARDS_IN_HAND = 4;
-
     private final String name;
     private int lp;
     private final List<Unit> deck;
@@ -43,7 +33,7 @@ public class Team {
      */
     public Team(String name, List<Unit> deck) {
         this.name = name;
-        this.lp = INITIAL_LIFE_POINT;
+        this.lp = GameConstants.INITIAL_LIFE_POINTS;
         this.deck = new ArrayList<>(deck);
         this.hand = new ArrayList<>();
         this.activeUnits = new ArrayList<>();
@@ -57,7 +47,7 @@ public class Team {
      * Constants.INIT_CARDS_IN_HAND.
      */
     public void drawInitialHand() {
-        for (int i = 0; i < INITIAL_CARDS_IN_HAND; i++) {
+        for (int i = 0; i < GameConstants.MAX_HAND_SIZE - 1; i++) {
             this.drawCard();
         }
     }

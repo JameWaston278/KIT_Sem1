@@ -17,7 +17,6 @@ import utils.EventLog;
 public class Game {
     private static final Position PLAYER_KING_INITIAL_POSITION = new Position(3, 0);
     private static final Position ENEMY_KING_INITIAL_POSITION = new Position(3, 6);
-    private static final int MAX_HAND_SIZE = 5;
 
     private final Board board;
     private final Team player;
@@ -25,8 +24,8 @@ public class Game {
     private Team currentTurn;
     private Team winner = null;
 
+    private boolean hasPlaceUnitInTurn;
     private boolean isGameOver;
-    private boolean hasPlaceUnitInTurn = false;
 
     /**
      * Constructor for the Game class, which initializes the game state with the
@@ -71,78 +70,6 @@ public class Game {
         currentTurn = player; // Player starts first
     }
 
-    // --- TURN MANAGEMENT ---
-
-    /**
-     * Starts the turn for the specified team. This method resets the moved status
-     * of all units on the team, allows the team to draw a card, and checks for
-     * win conditions at the start of the turn.
-     * 
-     * @param team The team whose turn is starting.
-     * @return A list of event log messages generated during progress.
-     */
-    public List<String> startTurn(Team team) {
-        List<String> logs = new ArrayList<>();
-        hasPlaceUnitInTurn = false;
-        team.resetAllMovedStatus();
-
-        logs.add(EventLog.TURN_START.format(team.getName()));
-
-        if (team.isDeckEmpty()) {
-            // If the team has no cards left to draw, they lose immediately.
-            winner = (team == player) ? enemy : player;
-            isGameOver = true;
-            logs.add(EventLog.DECK_EMPTY.format(team.getName()));
-            logs.add(EventLog.WINS.format(winner.getName()));
-            return logs;
-        }
-
-        team.drawCard();
-        checkWinCondition(logs);
-        return logs;
-    }
-
-    /**
-     * Ends the current turn for the specified team. This method checks if the
-     * team has a full hand and requires discarding a card, then switches the turn
-     * to the other team and starts their turn.
-     * 
-     * @param team          The team whose turn is ending.
-     * @param unitToDiscard The unit to discard from the team's hand if their hand
-     *                      is full. If the hand is not full, this should be
-     * @return A list of event log messages generated during progress.
-     * @throws GameLogicException If there is an error during end turn processing,
-     *                            such as trying to discard a card when the hand
-     *                            is not full, or not discarding a card when the
-     *                            hand is full.
-     */
-    public List<String> endTurn(Team team, Unit unitToDiscard) throws GameLogicException {
-        List<String> logs = new ArrayList<>();
-
-        if (team != currentTurn) {
-            throw new GameLogicException(ErrorMessage.WRONG_TURN.format(team.getName()));
-        }
-
-        int currentHandSize = team.getHand().size();
-        if (currentHandSize == MAX_HAND_SIZE) {
-            if (unitToDiscard == null) {
-                throw new GameLogicException(ErrorMessage.HAND_FULL.format(team.getName()));
-            }
-            team.discardCard(unitToDiscard);
-            logs.add(EventLog.DISCARDED.format(
-                    team.getName(), unitToDiscard.getName(), unitToDiscard.getAtk(), unitToDiscard.getDef()));
-        } else {
-            if (unitToDiscard != null) {
-                throw new GameLogicException(ErrorMessage.HAND_NOT_FULL.format(team.getName()));
-            }
-        }
-
-        currentTurn = (currentTurn == player) ? enemy : player;
-        logs.addAll(startTurn(currentTurn));
-
-        return logs;
-    }
-
     /**
      * Checks the win condition for both teams. A team wins if the opposing team is
      * defeated (LP <= 0) or if the opposing team has no more cards to draw.
@@ -150,7 +77,7 @@ public class Game {
      * 
      * @param logs The list of logs to which win condition events will be added.
      */
-    public void checkWinCondition(List<String> logs) {
+    void checkWinCondition(List<String> logs) {
         if (isGameOver) {
             return; // If the game is already over, no need to check win conditions again.
         }
@@ -169,21 +96,108 @@ public class Game {
         }
     }
 
-    // --- GAME LOGIC METHODS ---
+    // --- TURN MANAGEMENT ---
+
+    /**
+     * Starts the turn for the specified team. This method resets the moved status
+     * of all units on the team, allows the team to draw a card, and checks for
+     * win conditions at the start of the turn.
+     * 
+     * @param team The team whose turn is starting.
+     * @return A list of event log messages generated during progress.
+     */
+    public List<String> startTurn(Team team) {
+        hasPlaceUnitInTurn = false;
+        return TurnHelper.startTurn(this, team);
+    }
+
+    /**
+     * Ends the current turn for the specified team. This method checks if the
+     * team has a full hand and requires discarding a card, then switches the turn
+     * to the other team and starts their turn.
+     * 
+     * @param team          The team whose turn is ending.
+     * @param unitToDiscard The unit to discard from the team's hand if their hand
+     *                      is full. If the hand is not full, this should be
+     *                      null.
+     * @return A list of event log messages generated during progress.
+     * @throws GameLogicException If there is an error during end turn processing,
+     *                            such as trying to discard a card when the hand
+     *                            is not full, or not discarding a card when the
+     *                            hand is full.
+     */
+    public List<String> endTurn(Team team, Unit unitToDiscard) throws GameLogicException {
+        return TurnHelper.endTurn(this, team, unitToDiscard);
+    }
+
+    // --- GAME LOGIC ---
 
     /**
      * Executes a move for the specified team from the given starting position to
-     * the target position. This method validates the move according to game rules,
-     * updates the game state accordingly, and checks for win conditions after the
-     * move.
+     * the target position. This method handles all the game logic involved in
+     * moving a unit, including validating the move, resolving duels, combining
+     * units, and checking for win conditions after the move.
      * 
      * @param team    The team making the move.
      * @param fromPos The starting position of the unit being moved.
      * @param toPos   The target position of the unit being moved.
+     * @return A list of event log messages generated during progress.
      * @throws GameLogicException If the move is invalid according to game rules.
      */
-    public void executeMove(Team team, Position fromPos, Position toPos) throws GameLogicException {
-        MoveHelper.executeMove(this, team, fromPos, toPos);
+    public List<String> executeMove(Team team, Position fromPos, Position toPos) throws GameLogicException {
+        return MoveHelper.executeMove(this, team, fromPos, toPos);
+    }
+
+    /**
+     * Handles the logic for placing a unit on the board. This method checks if the
+     * player has already placed a unit this turn, validates the target position,
+     * checks for valid hand indices, and manages the combination of units if the
+     * target position is occupied by a friendly unit. It also updates the game
+     * state and logs relevant events.
+     *
+     * @param team        The team placing the unit.
+     * @param handIndices The list of indices from the player's hand representing
+     *                    the units to be placed.
+     * @param position    The target position on the board where the unit(s) should
+     *                    be placed.
+     * @return A list of event log messages generated during this action.
+     * @throws GameLogicException If any validation fails during the placement
+     *                            process,
+     *                            such as invalid placement conditions or hand
+     *                            indices.
+     */
+    public List<String> executePlace(Team team, List<Integer> handIndices, Position position)
+            throws GameLogicException {
+        return PlaceUnitHelper.placeUnit(this, team, handIndices, position);
+    }
+
+    /**
+     * Executes a block action for the specified team at the given position. This
+     * method validates the block action according to game rules and updates the
+     * unit's status to blocking if the action is valid.
+     * 
+     * @param team The team performing the block action.
+     * @param pos  The position of the unit that will block.
+     * @return A list of event log messages generated during progress.
+     * @throws GameLogicException If the block action is invalid according to game
+     *                            rules.
+     */
+    public List<String> executeBlock(Team team, Position pos) throws GameLogicException {
+        List<String> logs = new ArrayList<>();
+        Unit unit = board.getUnitAt(pos);
+
+        if (unit == null || !unit.getOwner().equals(team)) {
+            throw new GameLogicException(ErrorMessage.INVALID_UNIT.format());
+        }
+
+        if (unit.hasMoved()) {
+            throw new GameLogicException(ErrorMessage.UNIT_ALREADY_MOVED.format());
+        }
+
+        unit.setBlocking(true);
+        unit.setHasMoved(true);
+        logs.add(EventLog.BLOCKS.format(team.getName(), unit.getName()));
+        return logs;
     }
 
     /**
@@ -228,6 +242,24 @@ public class Game {
     }
 
     /**
+     * Returns the team whose turn it currently is.
+     * 
+     * @return The current turn's team.
+     */
+    public Team getCurrentTurn() {
+        return this.currentTurn;
+    }
+
+    /**
+     * Sets the current turn to the specified team.
+     * 
+     * @param team The team to set as the current turn.
+     */
+    void setCurrentTurn(Team team) {
+        this.currentTurn = team;
+    }
+
+    /**
      * Returns the winner of the game.
      * 
      * @return The winner.
@@ -237,11 +269,43 @@ public class Game {
     }
 
     /**
-     * Checks if the game is over.
+     * Sets the winner of the game.
      * 
-     * @return True if the game is over, false otherwise.
+     * @param winner The winner.
      */
-    public boolean isGameOver() {
-        return this.isGameOver;
+    void setWinner(Team winner) {
+        this.winner = winner;
+    }
+
+    /**
+     * Returns whether a unit has been placed during the current turn. This is used
+     * to enforce the rule that only one unit can be placed per turn.
+     * 
+     * @return True if a unit has been placed during the current turn, false
+     *         otherwise.
+     */
+    public boolean hasPlaceUnitInTurn() {
+        return this.hasPlaceUnitInTurn;
+    }
+
+    /**
+     * Sets whether a unit has been placed during the current turn. This should be
+     * set to true when a unit is successfully placed, and reset to false at the
+     * start of each turn.
+     * 
+     * @param hasPlaceUnitInTurn The value to set for whether a unit has been placed
+     *                           during the current turn.
+     */
+    public void setHasPlaceUnitInTurn(boolean hasPlaceUnitInTurn) {
+        this.hasPlaceUnitInTurn = hasPlaceUnitInTurn;
+    }
+
+    /**
+     * Sets the game over status.
+     * 
+     * @param isGameOver The game over status to set.
+     */
+    void setGameOver(boolean isGameOver) {
+        this.isGameOver = isGameOver;
     }
 }

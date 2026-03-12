@@ -9,6 +9,7 @@ import model.Board;
 import model.Position;
 import model.Team;
 import model.Unit;
+import utils.GameConstants;
 
 /**
  * The UnitMoveEvaluator class evaluates the potential moves for a unit on the
@@ -23,8 +24,8 @@ public class UnitMoveEvaluator {
 
     private static final int[][] POSSIBLE_DIRECTIONS = { { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 } };
     private static final ActionType[] DIRECTION_TYPES = {
-            ActionType.MOVE_UP, ActionType.MOVE_RIGHT,
-            ActionType.MOVE_DOWN, ActionType.MOVE_LEFT };
+        ActionType.MOVE_UP, ActionType.MOVE_RIGHT,
+        ActionType.MOVE_DOWN, ActionType.MOVE_LEFT };
 
     private final Board board;
     private final Team fellow;
@@ -204,8 +205,8 @@ public class UnitMoveEvaluator {
             int currentCol = pos.col() + dir[0];
             int currentRow = pos.row() + dir[1];
 
-            while (currentCol >= 0 && currentCol < Board.BOARD_SIZE
-                    && currentRow >= 0 && currentRow < Board.BOARD_SIZE) {
+            while (currentCol >= 0 && currentCol < GameConstants.BOARD_COLS
+                    && currentRow >= 0 && GameConstants.BOARD_ROWS >= currentRow) {
                 Position checkPos = new Position(currentCol, currentRow);
                 Unit hitUnit = board.getUnitAt(checkPos);
                 if (hitUnit != null) {

@@ -119,8 +119,11 @@ final class MoveHelper {
             // unitB's position.
             game.eliminateUnit(unitA);
             game.eliminateUnit(unitB);
+
             board.placeUnitAt(combinedUnit, posB);
+            combinedUnit.setHasMoved(false); // The combined unit can move again this turn
             combinedUnit.getOwner().addActiveUnit(combinedUnit);
+
             logs.add(EventLog.COMBINE_SUCCESS.format());
         }
     }

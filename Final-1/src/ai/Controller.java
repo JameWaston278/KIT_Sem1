@@ -13,6 +13,7 @@ import model.Game;
 import model.Position;
 import model.Team;
 import model.Unit;
+import utils.GameConstants;
 import utils.RandomUtils;
 
 /**
@@ -26,21 +27,22 @@ import utils.RandomUtils;
 public class Controller {
     private final Game game;
     private final Board board;
-    private final Team player;
-    private final Team enemy;
+    private final Team aiTeam;
+    private final Team enemyTeam;
     private final Random random;
 
     /**
      * Constructor for the Controller class.
      *
      * @param game   The game instance to control.
+     * @param aiTeam The team that the AI player belongs to.
      * @param random A Random instance for tie-breaking decisions.
      */
-    public Controller(Game game, Random random) {
+    public Controller(Game game, Team aiTeam, Random random) {
         this.game = game;
         this.board = game.getBoard();
-        this.player = game.getPlayer(); // Player is AI, Enemy is Human
-        this.enemy = game.getEnemy();
+        this.aiTeam = aiTeam;
+        this.enemyTeam = (aiTeam.equals(game.getPlayer()) ? game.getEnemy() : game.getPlayer());
         this.random = random;
     }
 
@@ -48,13 +50,18 @@ public class Controller {
      * Executes the AI player's turn by evaluating and performing the best moves for
      * the King, placements, and active units.
      *
+     * @return A list of log messages describing the actions taken during the turn.
      * @throws GameLogicException If there is an error during move execution.
      */
-    public void playTurn() throws GameLogicException {
-        moveKingPhase();
-        placeUnitPhase();
-        moveUnitPhase();
-        endTurnPhase();
+    public List<String> playTurn() throws GameLogicException {
+        List<String> logs = new ArrayList<>();
+
+        logs.addAll(moveKingPhase());
+        logs.addAll(placeUnitPhase());
+        logs.addAll(moveUnitPhase());
+        logs.addAll(endTurnPhase());
+
+        return logs;
     }
 
     /**
@@ -62,9 +69,9 @@ public class Controller {
      *
      * @throws GameLogicException If there is an error during move execution.
      */
-    private void moveKingPhase() throws GameLogicException {
-        KingEvaluator kingEvaluator = new KingEvaluator(board, player, enemy);
-        Position kingPos = board.getKingPosition(player);
+    private List<String> moveKingPhase() throws GameLogicException {
+        Position kingPos = board.getKingPosition(aiTeam);
+        KingEvaluator kingEvaluator = new KingEvaluator(board, aiTeam, enemyTeam);
         List<ScoredActions<Position>> scoredMoves = kingEvaluator.scoreMove(kingPos);
 
         // Find the maximum score among the scored moves
@@ -73,7 +80,7 @@ public class Controller {
         Position chosenMove = weightedRandom(bestMoves);
 
         // Move the King to the chosen position
-        game.moveUnit(kingPos, chosenMove);
+        return game.executeMove(aiTeam, kingPos, chosenMove);
     }
 
     /**
@@ -81,13 +88,14 @@ public class Controller {
      *
      * @throws GameLogicException If there is an error during move execution.
      */
-    private void placeUnitPhase() throws GameLogicException {
-        FieldsEvaluator fieldsEvaluator = new FieldsEvaluator(board, player, enemy);
-        Position kingPos = board.getKingPosition(player);
+    private List<String> placeUnitPhase() throws GameLogicException {
+        List<String> logs = new ArrayList<>();
+        Position kingPos = board.getKingPosition(aiTeam);
+        FieldsEvaluator fieldsEvaluator = new FieldsEvaluator(board, aiTeam, enemyTeam);
         List<ScoredActions<Position>> scoredFields = fieldsEvaluator.scorePlacement(kingPos);
 
         if (scoredFields.isEmpty()) {
-            return; // No valid placements available
+            return logs; // No valid placements available
         }
 
         // Find the maximum score among the scored placements
@@ -96,40 +104,48 @@ public class Controller {
         Position chosenField = weightedRandom(bestFields);
 
         // Randomly select an unit from the player's hand to place on the chosen field
-        Unit chosenUnit = chooseUnitToPlace(player.getHand());
+        Unit chosenUnit = chooseUnitToPlace(aiTeam.getHand());
 
         // Place the chosen unit on the chosen field
         if (chosenUnit != null) {
-            game.spawnUnit(chosenUnit, chosenField);
+            int oneBasedIndex = aiTeam.getHand().indexOf(chosenUnit) + 1; // Convert to 1-based index for logging
+            logs.addAll(game.executePlace(aiTeam, List.of(oneBasedIndex), chosenField));
         }
+        return logs;
     }
 
     /**
-     * Executes the AI player's actions for all active units on the board.
+     * Evaluates and executes the AI player's actions for all active units on the
+     * board.
      *
      * @throws GameLogicException If there is an error during move execution.
      */
-    private void moveUnitPhase() throws GameLogicException {
-        // Evaluate all active units and execute the best action for each unit until all
-        // have moved
-        UnitMoveEvaluator unitMoveEvaluator = new UnitMoveEvaluator(board, player, enemy);
+    private List<String> moveUnitPhase() throws GameLogicException {
+        List<String> logs = new ArrayList<>();
+        UnitMoveEvaluator unitMoveEvaluator = new UnitMoveEvaluator(board, aiTeam, enemyTeam);
+
         while (true) {
             List<EvaluatedUnit> allUnits = unitMoveEvaluator.evaluateAllUnits();
             if (allUnits.isEmpty()) {
-                return; // No active units to move
+                break; // No active units to move
             }
 
             // Find the maximum score among all evaluated units
             List<EvaluatedUnit> bestUnits = findBestOptions(allUnits, EvaluatedUnit::totalScore, u -> u);
             // Randomly select one of the best units
             EvaluatedUnit bestUnit = weightedRandom(bestUnits);
-
             // Find the best action for the chosen unit
             ActionType bestAction = findBestAction(bestUnit.actions());
 
-            // Execute the best action for the chosen unit
-            game.executeUnitAction(bestUnit.unit(), bestAction);
+            Position fromPos = bestUnit.unit().getPosition();
+            if (bestAction == ActionType.BLOCK) {
+                logs.addAll(game.executeBlock(aiTeam, fromPos));
+            } else {
+                Position toPos = bestAction.getTargetPosition(fromPos);
+                logs.addAll(game.executeMove(aiTeam, fromPos, toPos));
+            }
         }
+        return logs;
     }
 
     /**
@@ -138,11 +154,11 @@ public class Controller {
      *
      * @throws GameLogicException If there is an error during move execution.
      */
-    private void endTurnPhase() throws GameLogicException {
-        List<Unit> hand = player.getHand();
-        if (hand.size() == 5) {
-            // If the player's hand is full at the end of the turn, randomly discard one
-            // card
+    private List<String> endTurnPhase() throws GameLogicException {
+        List<Unit> hand = aiTeam.getHand();
+        Unit discardedUnit = null;
+        if (hand.size() == GameConstants.MAX_HAND_SIZE) {
+            // If the player's hand is full, randomly discard one card
             List<Integer> discardWeights = new ArrayList<>();
             for (Unit unit : hand) {
                 discardWeights.add(unit.getAtk() + unit.getDef());
@@ -150,10 +166,9 @@ public class Controller {
 
             // Randomly select a card to discard based on the weights
             int discardIndex = RandomUtils.inverseWeightedRandom(discardWeights, random);
-            Unit discardedUnit = hand.get(discardIndex);
-
-            player.discardCard(discardedUnit);
+            discardedUnit = hand.get(discardIndex);
         }
+        return game.endTurn(aiTeam, discardedUnit);
     }
 
     // --- HELPER METHODS ---

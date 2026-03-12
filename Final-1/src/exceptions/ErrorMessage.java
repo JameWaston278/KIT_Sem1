@@ -13,6 +13,13 @@ package exceptions;
  */
 public enum ErrorMessage {
     UNIT_ALREADY_MOVED("Unit %s has already moved this turn."),
+    INVALID_UNIT("Invalid unit selected."),
+
+    ALREADY_PLACED_UNIT("A unit has already been placed this turn."),
+    INVALID_PLACEMENT("Target position %s is not adjacent to the King."),
+    PLACE_ON_ENEMY_UNIT("Target position %s is occupied by an enemy unit."),
+    INVALID_CARD_INDEX("Card index %d is out of bounds."),
+    DUPLICATE_CARD_INDEX("Duplicate card index %d in hand."),
 
     KING_CANNOT_DUEL("The King cannot attack or be attacked."),
     KING_CANNOT_BLOCK("The King cannot block."),
@@ -26,7 +33,6 @@ public enum ErrorMessage {
     INVALID_COORDINATES("Invalid coordinates: %s."),
     OUT_OF_BOUNDS("Coordinates out of bounds: %s."),
     NO_UNIT_AT_POSITION("No unit at position %s."),
-    INVALID_UNIT("Invalid unit selected."),
 
     GAME_OVER("Game over. %s wins!");
 

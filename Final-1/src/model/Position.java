@@ -5,6 +5,7 @@ import java.util.List;
 
 import exceptions.ErrorMessage;
 import exceptions.GameLogicException;
+import utils.GameConstants;
 
 /**
  * The Position class represents a specific location on the game board, defined
@@ -73,7 +74,7 @@ public record Position(int col, int row) {
         for (int[] dir : directions) {
             int newCol = this.col + dir[0];
             int newRow = this.row + dir[1];
-            if (newCol >= 0 && newCol < Board.BOARD_SIZE && newRow >= 0 && newRow < Board.BOARD_SIZE) {
+            if (newCol >= 0 && newCol < GameConstants.BOARD_COLS && newRow >= 0 && newRow < GameConstants.BOARD_ROWS) {
                 neighbors.add(new Position(newCol, newRow));
             }
         }

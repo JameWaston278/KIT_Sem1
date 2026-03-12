@@ -19,9 +19,9 @@ import model.Unit;
  * @author udqch
  */
 public record EvaluatedUnit(
-        Unit unit,
-        int totalScore,
-        // List of scored actions for the unit (e.g., move, block, stay in place) and
-        // their associated scores.
-        List<ScoredActions<ActionType>> actions) {
+                Unit unit,
+                int totalScore,
+                // List of scored actions for the unit (e.g., move, block, stay in place) and
+                // their associated scores.
+                List<ScoredActions<ActionType>> actions) {
 }

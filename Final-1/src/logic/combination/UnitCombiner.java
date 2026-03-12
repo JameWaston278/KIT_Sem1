@@ -51,10 +51,13 @@ public final class UnitCombiner {
 
         String newQualifier = b.getQualifier() + StringConstants.SPACE + a.getQualifier();
         String newRole = b.getRole();
+
+        // Create a new UnitTemplate for the combined unit
         UnitTemplate newTemplate = new UnitTemplate(newQualifier, newRole, finalStats.newAtk(), finalStats.newDef());
         Unit combinedUnit = new Unit(newTemplate, a.getOwner());
         combinedUnit.setHidden(a.isHidden() || b.isHidden());
         // The combined unit is hidden if either of the original units is hidden
+
         return combinedUnit;
     }
 }

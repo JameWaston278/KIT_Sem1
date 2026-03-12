@@ -9,11 +9,10 @@ import model.Position;
 import model.Team;
 
 /**
- * The PlacementEvaluator class provides a method to evaluate potential
- * placements
- * for the King unit on the board. It calculates a score for each possible
- * placement based on the distance to the enemy King, the number of fellow and
- * enemy units around the new position.
+ * The FieldsEvaluator class provides a method to evaluate potential
+ * placements for the King unit on the board. It calculates a score for each
+ * possible placement based on the distance to the enemy King, the number of
+ * fellow and enemy units around the new position.
  * 
  * @author udqch
  */
@@ -27,7 +26,7 @@ public class FieldsEvaluator {
     private final Team enemy;
 
     /**
-     * Constructor for the PlacementEvaluator class, which initializes the board and
+     * Constructor for the FieldsEvaluator class, which initializes the board and
      * the teams for evaluation.
      * 
      * @param board  The game board to evaluate placements on.
