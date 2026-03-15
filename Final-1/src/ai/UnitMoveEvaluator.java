@@ -24,8 +24,8 @@ public class UnitMoveEvaluator {
 
     private static final int[][] POSSIBLE_DIRECTIONS = { { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 } };
     private static final ActionType[] DIRECTION_TYPES = {
-        ActionType.MOVE_UP, ActionType.MOVE_RIGHT,
-        ActionType.MOVE_DOWN, ActionType.MOVE_LEFT };
+            ActionType.MOVE_UP, ActionType.MOVE_RIGHT,
+            ActionType.MOVE_DOWN, ActionType.MOVE_LEFT };
 
     private final Board board;
     private final Team fellow;
@@ -79,13 +79,16 @@ public class UnitMoveEvaluator {
         List<ScoredActions<ActionType>> actions = new ArrayList<>();
         int totalScore = 0;
         Position currentPos = unit.getPosition();
+        if (currentPos == null) {
+            return new EvaluatedUnit(unit, 0, new ArrayList<>());
+        }
 
         for (int i = 0; i < 4; i++) {
             Position newPos = new Position(
                     currentPos.col() + POSSIBLE_DIRECTIONS[i][0], currentPos.row() + POSSIBLE_DIRECTIONS[i][1]);
 
             // Check if the new position is within the bounds of the board
-            if (!board.isValid(newPos)) {
+            if (!board.isWithinBounds(newPos.col(), newPos.row())) {
                 actions.add(new ScoredActions<>(DIRECTION_TYPES[i], 0)); // Invalid move
                 continue; // Skip invalid moves
             }
@@ -124,7 +127,7 @@ public class UnitMoveEvaluator {
 
         // Situtation 1: new position is empty
         if (targetUnit == null) {
-            Position enemyKingPos = board.getKingPosition(enemy);
+            Position enemyKingPos = enemy.getKing().getPosition();
             int steps = newPos.distanceTo(enemyKingPos);
             int enemies = board.countUnitsAround(newPos, false, enemy, null);
             return 10 * steps - enemies;
@@ -206,7 +209,7 @@ public class UnitMoveEvaluator {
             int currentRow = pos.row() + dir[1];
 
             while (currentCol >= 0 && currentCol < GameConstants.BOARD_COLS
-                    && currentRow >= 0 && GameConstants.BOARD_ROWS >= currentRow) {
+                    && currentRow >= 0 && currentRow < GameConstants.BOARD_ROWS) {
                 Position checkPos = new Position(currentCol, currentRow);
                 Unit hitUnit = board.getUnitAt(checkPos);
                 if (hitUnit != null) {

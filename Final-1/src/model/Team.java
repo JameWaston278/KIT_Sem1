@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import exceptions.ErrorMessage;
 import exceptions.GameLogicException;
+import message.ErrorMessage;
 import utils.GameConstants;
 
 /**
@@ -19,7 +19,8 @@ import utils.GameConstants;
 public class Team {
     private final String name;
     private int lp;
-    private final List<Unit> deck;
+    private final Unit king; // Each team has a King unit that must be protected
+    private final List<UnitTemplate> deck;
     private final List<Unit> hand;
     private final List<Unit> activeUnits;
 
@@ -31,9 +32,10 @@ public class Team {
      * @param name The name of the team/player.
      * @param deck The initial deck of units for the team.
      */
-    public Team(String name, List<Unit> deck) {
+    public Team(String name, List<UnitTemplate> deck) {
         this.name = name;
         this.lp = GameConstants.INITIAL_LIFE_POINTS;
+        this.king = new King(this);
         this.deck = new ArrayList<>(deck);
         this.hand = new ArrayList<>();
         this.activeUnits = new ArrayList<>();
@@ -57,8 +59,8 @@ public class Team {
      * empty, the team is marked as defeated.
      */
     public void drawCard() {
-        Unit drawnCard = this.deck.remove(0);
-        this.hand.add(drawnCard);
+        UnitTemplate drawnCard = this.deck.remove(0);
+        this.hand.add(new Unit(drawnCard, this));
     }
 
     /**
@@ -117,6 +119,7 @@ public class Team {
         for (Unit units : activeUnits) {
             units.setHasMoved(false);
         }
+        king.setHasMoved(false);
     }
 
     // --- GETTERS & SETTERS ---
@@ -137,6 +140,16 @@ public class Team {
      */
     public int getLp() {
         return lp;
+    }
+
+    /**
+     * Gets the King unit of the team, which is a special unit that must be
+     * protected. If the King is defeated, the team loses the game.
+     * 
+     * @return The King unit of the team.
+     */
+    public Unit getKing() {
+        return king;
     }
 
     /**

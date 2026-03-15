@@ -1,4 +1,4 @@
-package utils;
+package message;
 
 /**
  * The EventLog enum defines various string templates for logging different
@@ -73,8 +73,6 @@ public enum EventLog {
     DECK_EMPTY("%s has no cards left in the deck!"),
     /** Template for logging when a player wins the game. */
     WINS("%s wins!"),
-    /** Template for logging the start of a player's turn. */
-    TURN_START("It is %s's turn!"),
 
     // --- YIELD ---
     /**
@@ -82,7 +80,13 @@ public enum EventLog {
      * showing the card that was discarded and the current hand size after
      * discarding.
      */
-    DISCARDED("%s discarded %s (%d/%d).");
+    DISCARDED("%s discarded %s (%d/%d)."),
+
+    /**
+     * Template for logging when the turn switches to the next player, showing the
+     * name of the player whose turn it is now.
+     */
+    SWITCH_TURNS("It is %s's turn!");
 
     private final String template;
 

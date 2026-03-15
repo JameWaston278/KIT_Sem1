@@ -1,4 +1,4 @@
-package exceptions;
+package message;
 
 /**
  * The ErrorMessage enum defines a set of standardized error messages for
@@ -12,11 +12,13 @@ package exceptions;
  * @author udqch
  */
 public enum ErrorMessage {
+    // --- UNIT ERRORS ---
     /** Error message for when a unit has already moved this turn. */
     UNIT_ALREADY_MOVED("Unit %s has already moved this turn."),
     /** Error message for when a unit can not be selected. */
     INVALID_UNIT("Invalid unit selected."),
 
+    //
     /** Error message for when a unit has already placed a unit this turn. */
     ALREADY_PLACED_UNIT("A unit has already been placed this turn."),
     /** Error message for when a unit is placed on a non-adjacent position. */
@@ -60,6 +62,10 @@ public enum ErrorMessage {
      */
     INVALID_COORDINATES("Invalid coordinates: %s."),
     /**
+     * Error message for when a player tries to perform an invalid move action.
+     */
+    INVALID_MOVE("Invalid move from %s to %s (exceeds movement range)."),
+    /**
      * Error message for when a player tries to perform an action on a position that
      * is out of bounds.
      */
@@ -68,10 +74,7 @@ public enum ErrorMessage {
      * Error message for when a player tries to perform an action on a position that
      * is not occupied by a unit.
      */
-    NO_UNIT_AT_POSITION("No unit at position %s."),
-
-    /** Error message for when the game is over and a player has won. */
-    GAME_OVER("Game over. %s wins!");
+    NO_UNIT_AT_POSITION("No unit at position %s.");
 
     private final String text;
 

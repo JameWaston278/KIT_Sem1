@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
@@ -24,7 +25,7 @@ import utils.RandomUtils;
  * 
  * @author udqch
  */
-public class Controller {
+public class AIPlayer {
     private final Game game;
     private final Board board;
     private final Team aiTeam;
@@ -36,13 +37,14 @@ public class Controller {
      *
      * @param game   The game instance to control.
      * @param aiTeam The team that the AI player belongs to.
-     * @param random A Random instance for tie-breaking decisions.
+     * @param random A Random instance initialized with a specific seed for
+     *               reproducibility of the AI's decisions.
      */
-    public Controller(Game game, Team aiTeam, Random random) {
+    public AIPlayer(Game game, Team aiTeam, Random random) {
         this.game = game;
         this.board = game.getBoard();
         this.aiTeam = aiTeam;
-        this.enemyTeam = (aiTeam.equals(game.getPlayer()) ? game.getEnemy() : game.getPlayer());
+        this.enemyTeam = (aiTeam.equals(game.getTeam1()) ? game.getTeam2() : game.getTeam1());
         this.random = random;
     }
 
@@ -50,18 +52,28 @@ public class Controller {
      * Executes the AI player's turn by evaluating and performing the best moves for
      * the King, placements, and active units.
      *
-     * @return A list of log messages describing the actions taken during the turn.
+     * @param stepCallback A callback function that accepts a list of log messages
+     *                     after each phase of the AI's turn.
      * @throws GameLogicException If there is an error during move execution.
      */
-    public List<String> playTurn() throws GameLogicException {
-        List<String> logs = new ArrayList<>();
+    public void playTurn(BiConsumer<List<String>, Position> stepCallback) throws GameLogicException {
 
-        logs.addAll(moveKingPhase());
-        logs.addAll(placeUnitPhase());
-        logs.addAll(moveUnitPhase());
-        logs.addAll(endTurnPhase());
+        moveKingPhase(stepCallback);
+        if (game.isGameOver()) {
+            return;
+        }
 
-        return logs;
+        placeUnitPhase(stepCallback);
+        if (game.isGameOver()) {
+            return;
+        }
+
+        moveUnitPhase(stepCallback);
+        if (game.isGameOver()) {
+            return;
+        }
+
+        endTurnPhase(stepCallback);
     }
 
     /**
@@ -69,8 +81,8 @@ public class Controller {
      *
      * @throws GameLogicException If there is an error during move execution.
      */
-    private List<String> moveKingPhase() throws GameLogicException {
-        Position kingPos = board.getKingPosition(aiTeam);
+    private void moveKingPhase(BiConsumer<List<String>, Position> stepCallback) throws GameLogicException {
+        Position kingPos = aiTeam.getKing().getPosition();
         KingEvaluator kingEvaluator = new KingEvaluator(board, aiTeam, enemyTeam);
         List<ScoredActions<Position>> scoredMoves = kingEvaluator.scoreMove(kingPos);
 
@@ -80,7 +92,8 @@ public class Controller {
         Position chosenMove = weightedRandom(bestMoves);
 
         // Move the King to the chosen position
-        return game.executeMove(aiTeam, kingPos, chosenMove);
+        List<String> logs = game.executeMove(aiTeam, kingPos, chosenMove);
+        stepCallback.accept(logs, chosenMove);
     }
 
     /**
@@ -88,14 +101,13 @@ public class Controller {
      *
      * @throws GameLogicException If there is an error during move execution.
      */
-    private List<String> placeUnitPhase() throws GameLogicException {
-        List<String> logs = new ArrayList<>();
-        Position kingPos = board.getKingPosition(aiTeam);
+    private void placeUnitPhase(BiConsumer<List<String>, Position> stepCallback) throws GameLogicException {
+        Position kingPos = aiTeam.getKing().getPosition();
         FieldsEvaluator fieldsEvaluator = new FieldsEvaluator(board, aiTeam, enemyTeam);
         List<ScoredActions<Position>> scoredFields = fieldsEvaluator.scorePlacement(kingPos);
 
         if (scoredFields.isEmpty()) {
-            return logs; // No valid placements available
+            return; // No valid placements available
         }
 
         // Find the maximum score among the scored placements
@@ -109,9 +121,9 @@ public class Controller {
         // Place the chosen unit on the chosen field
         if (chosenUnit != null) {
             int oneBasedIndex = aiTeam.getHand().indexOf(chosenUnit) + 1; // Convert to 1-based index for logging
-            logs.addAll(game.executePlace(aiTeam, List.of(oneBasedIndex), chosenField));
+            List<String> logs = game.executePlace(aiTeam, List.of(oneBasedIndex), chosenField);
+            stepCallback.accept(logs, chosenField);
         }
-        return logs;
     }
 
     /**
@@ -120,13 +132,12 @@ public class Controller {
      *
      * @throws GameLogicException If there is an error during move execution.
      */
-    private List<String> moveUnitPhase() throws GameLogicException {
-        List<String> logs = new ArrayList<>();
+    private void moveUnitPhase(BiConsumer<List<String>, Position> stepCallback) throws GameLogicException {
         UnitMoveEvaluator unitMoveEvaluator = new UnitMoveEvaluator(board, aiTeam, enemyTeam);
 
         while (true) {
             List<EvaluatedUnit> allUnits = unitMoveEvaluator.evaluateAllUnits();
-            if (allUnits.isEmpty()) {
+            if (allUnits.isEmpty() || game.isGameOver()) {
                 break; // No active units to move
             }
 
@@ -138,14 +149,25 @@ public class Controller {
             ActionType bestAction = findBestAction(bestUnit.actions());
 
             Position fromPos = bestUnit.unit().getPosition();
+            if (fromPos == null) {
+                continue; // Skip units that are not on the board
+            }
+
+            List<String> logs = new ArrayList<>();
+            Position targetPos;
             if (bestAction == ActionType.BLOCK) {
                 logs.addAll(game.executeBlock(aiTeam, fromPos));
+                targetPos = fromPos;
             } else {
-                Position toPos = bestAction.getTargetPosition(fromPos);
-                logs.addAll(game.executeMove(aiTeam, fromPos, toPos));
+                targetPos = bestAction.getTargetPosition(fromPos);
+                logs.addAll(game.executeMove(aiTeam, fromPos, targetPos));
+            }
+
+            stepCallback.accept(logs, targetPos);
+            if (game.isGameOver()) {
+                break;
             }
         }
-        return logs;
     }
 
     /**
@@ -154,21 +176,22 @@ public class Controller {
      *
      * @throws GameLogicException If there is an error during move execution.
      */
-    private List<String> endTurnPhase() throws GameLogicException {
+    private void endTurnPhase(BiConsumer<List<String>, Position> stepCallback) throws GameLogicException {
         List<Unit> hand = aiTeam.getHand();
         Unit discardedUnit = null;
-        if (hand.size() == GameConstants.MAX_HAND_SIZE) {
+        if (hand.size() >= GameConstants.MAX_HAND_SIZE) {
             // If the player's hand is full, randomly discard one card
             List<Integer> discardWeights = new ArrayList<>();
             for (Unit unit : hand) {
-                discardWeights.add(unit.getAtk() + unit.getDef());
+                discardWeights.add(Math.max(unit.getAtk() + unit.getDef(), 0));
             }
 
             // Randomly select a card to discard based on the weights
             int discardIndex = RandomUtils.inverseWeightedRandom(discardWeights, random);
             discardedUnit = hand.get(discardIndex);
         }
-        return game.endTurn(aiTeam, discardedUnit);
+        List<String> logs = game.endTurn(aiTeam, discardedUnit);
+        stepCallback.accept(logs, null);
     }
 
     // --- HELPER METHODS ---
@@ -269,5 +292,16 @@ public class Controller {
             }
         }
         return bestValues;
+    }
+
+    // --- GETTERS ---
+
+    /**
+     * Returns the AI player's team.
+     * 
+     * @return The AI player's team.
+     */
+    public Team getAiTeam() {
+        return aiTeam;
     }
 }

@@ -50,12 +50,12 @@ public class FieldsEvaluator {
      *                            (e.g., invalid position).
      */
     public List<ScoredActions<Position>> scorePlacement(Position kingPos) throws GameLogicException {
-        Position enemyKingPos = board.getKingPosition(enemy);
+        Position enemyKingPos = enemy.getKing().getPosition();
         List<Position> possibleMoves = kingPos.getNeighbors(POSSIBLE_DIRECTIONS);
         List<ScoredActions<Position>> scoredFields = new ArrayList<>();
         for (Position move : possibleMoves) {
-            if (board.isOccupied(move)) {
-                continue; // Skip occupied positions
+            if (board.isOccupied(move) || !board.isWithinBounds(move.col(), move.row())) {
+                continue; // Skip occupied or out-of-bounds positions
             }
             int steps = move.distanceTo(enemyKingPos);
             int fellows = board.countUnitsAround(move, false, fellow, null);

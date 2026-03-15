@@ -3,8 +3,8 @@ package model;
 import java.util.ArrayList;
 import java.util.List;
 
-import exceptions.ErrorMessage;
 import exceptions.GameLogicException;
+import message.ErrorMessage;
 import utils.GameConstants;
 
 /**

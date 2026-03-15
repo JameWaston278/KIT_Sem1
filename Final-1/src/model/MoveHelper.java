@@ -3,12 +3,12 @@ package model;
 import java.util.ArrayList;
 import java.util.List;
 
-import exceptions.ErrorMessage;
 import exceptions.GameLogicException;
 import logic.Duel;
 import logic.DuelResult;
 import logic.combination.UnitCombiner;
-import utils.EventLog;
+import message.ErrorMessage;
+import message.EventLog;
 
 /**
  * Helper class to execute a move action in the game, handling all the logic
@@ -45,7 +45,7 @@ final class MoveHelper {
         }
 
         if (unit.hasMoved()) {
-            throw new GameLogicException(ErrorMessage.UNIT_ALREADY_MOVED.format());
+            throw new GameLogicException(ErrorMessage.UNIT_ALREADY_MOVED.format(unit.getName()));
         }
 
         if (unit.isKing()) {

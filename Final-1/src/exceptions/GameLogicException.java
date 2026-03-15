@@ -1,5 +1,7 @@
 package exceptions;
 
+import message.ErrorMessage;
+
 /**
  * The GameLogicException class is a custom exception that extends the standard
  * Exception class. It is used to represent errors that occur during the game

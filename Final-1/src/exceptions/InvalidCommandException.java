@@ -12,8 +12,7 @@ package exceptions;
 public class InvalidCommandException extends Exception {
 
     /**
-     * Constructor for the InvalidCommandException class, which takes a custom
-     * error message as a parameter.
+     * Default constructor for the InvalidCommandException class.
      */
     public InvalidCommandException() {
     }

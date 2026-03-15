@@ -40,8 +40,8 @@ public enum ActionType {
      * @return The target position after applying the action's direction.
      */
     public Position getTargetPosition(Position currentPosition) {
-        int newRow = currentPosition.row() + rowDelta;
         int newCol = currentPosition.col() + colDelta;
-        return new Position(newRow, newCol);
+        int newRow = currentPosition.row() + rowDelta;
+        return new Position(newCol, newRow);
     }
 }

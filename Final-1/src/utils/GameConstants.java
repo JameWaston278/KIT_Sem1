@@ -25,6 +25,9 @@ public final class GameConstants {
     /** Number of columns on the game board. */
     public static final int BOARD_COLS = 7;
 
+    /** The prefix for error messages. */
+    public static final String ERROR_PREFIX = "ERROR: ";
+
     private GameConstants() {
         // Private constructor to prevent instantiation of this utility class
     }

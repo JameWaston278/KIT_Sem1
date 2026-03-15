@@ -3,9 +3,9 @@ package model;
 import java.util.ArrayList;
 import java.util.List;
 
-import exceptions.ErrorMessage;
 import exceptions.GameLogicException;
-import utils.EventLog;
+import message.ErrorMessage;
+import message.EventLog;
 
 /**
  * The Game class represents the overall state and logic of the game. It manages
@@ -15,12 +15,12 @@ import utils.EventLog;
  * @author udqch
  */
 public class Game {
-    private static final Position PLAYER_KING_INITIAL_POSITION = new Position(3, 0);
-    private static final Position ENEMY_KING_INITIAL_POSITION = new Position(3, 6);
+    private static final Position TEAM1_KING_INITIAL_POSITION = new Position(3, 0);
+    private static final Position TEAM2_KING_INITIAL_POSITION = new Position(3, 6);
 
     private final Board board;
-    private final Team player;
-    private final Team enemy;
+    private final Team team1;
+    private final Team team2;
     private Team currentTurn;
     private Team winner = null;
 
@@ -32,24 +32,19 @@ public class Game {
      * provided parameters. It sets up the player and enemy teams, initializes the
      * game board, and places the Kings on the board.
      * 
-     * @param playerName The name of the player's team. If null, a default name
-     *                   "Player" will be used.
-     * @param enemyName  The name of the enemy's team. If null, a default name
-     *                   "Enemy" will be used.
-     * @param playerDeck The list of Unit objects representing the player's deck.
-     * @param enemyDeck  The list of Unit objects representing the enemy's deck.
+     * @param team1 The team representing the first team.
+     * @param team2 The team representing the second team.
+     * 
      * @throws GameLogicException If there is an error during game initialization,
      *                            such as invalid deck configurations or issues
      *                            placing units on the board.
      */
-    public Game(String playerName, String enemyName, List<Unit> playerDeck, List<Unit> enemyDeck)
+    public Game(Team team1, Team team2)
             throws GameLogicException {
 
         this.board = new Board();
-        String playerTeamName = (playerName != null) ? playerName : "Player";
-        String enemyTeamName = (enemyName != null) ? enemyName : "Enemy";
-        this.player = new Team(playerTeamName, playerDeck);
-        this.enemy = new Team(enemyTeamName, enemyDeck);
+        this.team1 = team1;
+        this.team2 = team2;
 
         this.isGameOver = false;
 
@@ -58,16 +53,14 @@ public class Game {
 
     private void initializeGame() throws GameLogicException {
         // Both teams draw their initial hand
-        player.drawInitialHand();
-        enemy.drawInitialHand();
+        team1.drawInitialHand();
+        team2.drawInitialHand();
 
         // Place the Kings on the board
-        King playerKing = new King(player);
-        King enemyKing = new King(enemy);
-        board.placeUnitAt(playerKing, PLAYER_KING_INITIAL_POSITION);
-        board.placeUnitAt(enemyKing, ENEMY_KING_INITIAL_POSITION);
+        board.placeUnitAt(team1.getKing(), TEAM1_KING_INITIAL_POSITION);
+        board.placeUnitAt(team2.getKing(), TEAM2_KING_INITIAL_POSITION);
 
-        currentTurn = player; // Player starts first
+        currentTurn = team1; // Team 1 starts first
     }
 
     /**
@@ -82,15 +75,15 @@ public class Game {
             return; // If the game is already over, no need to check win conditions again.
         }
 
-        if (player.isDefeated() || enemy.isDefeated()) {
-            if (player.isDefeated()) {
-                logs.add(EventLog.LP_DROPPED_TO_ZERO.format(player.getName()));
+        if (team1.isDefeated() || team2.isDefeated()) {
+            if (team1.isDefeated()) {
+                logs.add(EventLog.LP_DROPPED_TO_ZERO.format(team1.getName()));
             }
-            if (enemy.isDefeated()) {
-                logs.add(EventLog.LP_DROPPED_TO_ZERO.format(enemy.getName()));
+            if (team2.isDefeated()) {
+                logs.add(EventLog.LP_DROPPED_TO_ZERO.format(team2.getName()));
             }
 
-            winner = player.isDefeated() ? enemy : player;
+            winner = team1.isDefeated() ? team2 : team1;
             isGameOver = true;
             logs.add(EventLog.WINS.format(winner.getName()));
         }
@@ -257,8 +250,8 @@ public class Game {
      * 
      * @return The current player's team.
      */
-    public Team getPlayer() {
-        return this.player;
+    public Team getTeam1() {
+        return this.team1;
     }
 
     /**
@@ -266,8 +259,8 @@ public class Game {
      * 
      * @return The enemy player's team.
      */
-    public Team getEnemy() {
-        return this.enemy;
+    public Team getTeam2() {
+        return this.team2;
     }
 
     /**

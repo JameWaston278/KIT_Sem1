@@ -30,6 +30,7 @@ public class UnitTemplate {
     }
 
     // --- GETTERS ---
+
     /**
      * Returns the qualifier of the unit.
      * 

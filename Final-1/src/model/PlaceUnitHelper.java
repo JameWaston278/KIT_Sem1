@@ -5,10 +5,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import exceptions.ErrorMessage;
 import exceptions.GameLogicException;
 import logic.combination.UnitCombiner;
-import utils.EventLog;
+import message.ErrorMessage;
+import message.EventLog;
 import utils.GameConstants;
 
 /**
@@ -47,12 +47,13 @@ final class PlaceUnitHelper {
      */
     static List<String> placeUnit(Game game, Team team, List<Integer> handIndices, Position targetPos)
             throws GameLogicException {
+        game.getBoard().isValid(targetPos); // Validate the target position first
         List<Unit> unitsToPlace = validateInput(game, team, handIndices, targetPos);
 
         List<String> logs = new ArrayList<>();
 
         for (Unit unit : unitsToPlace) {
-            team.getHand().remove(unit);
+            team.discardCard(unit);
         }
 
         for (Unit unit : unitsToPlace) {
@@ -68,7 +69,7 @@ final class PlaceUnitHelper {
                 // If the target position is empty, simply place the unit there
                 game.getBoard().placeUnitAt(unit, targetPos);
                 team.addActiveUnit(unit);
-                unit.setHasMoved(true);
+                unit.setHasMoved(false);
             } else {
                 // If the target position is occupied by a friendly unit, combine them
                 combineUnits(game, unit, targetUnit, logs);
@@ -86,7 +87,7 @@ final class PlaceUnitHelper {
             throw new GameLogicException(ErrorMessage.ALREADY_PLACED_UNIT.format());
         }
 
-        Position kingPos = game.getBoard().getKingPosition(team);
+        Position kingPos = team.getKing().getPosition();
         int rowDiff = Math.abs(kingPos.row() - targetPos.row());
         int colDiff = Math.abs(kingPos.col() - targetPos.col());
         if (rowDiff > 1 || colDiff > 1) {

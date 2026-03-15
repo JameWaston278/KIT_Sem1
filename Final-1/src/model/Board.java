@@ -1,10 +1,7 @@
 package model;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import exceptions.ErrorMessage;
 import exceptions.GameLogicException;
+import message.ErrorMessage;
 import utils.GameConstants;
 
 /**
@@ -23,7 +20,6 @@ public class Board {
     private static final int[][] FOUR_DIRECTIONS = { { -1, 0 }, { 0, -1 }, { 0, 1 }, { 1, 0 } };
 
     private final Unit[][] board;
-    private final Map<Team, Position> kingPositions = new HashMap<>(); // Map to track the positions of each team's King
 
     /**
      * Constructor for the Board class, which initializes an empty 7x7 grid.
@@ -52,10 +48,7 @@ public class Board {
      */
     public void placeUnitAt(Unit unit, Position pos) {
         this.board[pos.col()][pos.row()] = unit;
-
-        if (unit.isKing()) {
-            kingPositions.put(unit.getOwner(), pos); // Update the King's position in the map
-        }
+        unit.setPosition(pos); // Update the unit's position
     }
 
     /**
@@ -85,10 +78,6 @@ public class Board {
         }
         placeUnitAt(unit, toPos);
         removeUnitAt(fromPos);
-
-        if (unit.isKing()) {
-            kingPositions.put(unit.getOwner(), toPos); // Update the King's position in the map
-        }
     }
 
     // --- CHECKERS ---
@@ -118,6 +107,19 @@ public class Board {
     }
 
     /**
+     * Check if the specified coordinates are within the board limits quietly (no
+     * exceptions).
+     * 
+     * @param col The column index to check.
+     * @param row The row index to check.
+     * @return True if the coordinates are within bounds, false otherwise.
+     */
+    public boolean isWithinBounds(int col, int row) {
+        return col >= 0 && col < GameConstants.BOARD_COLS
+                && row >= 0 && row < GameConstants.BOARD_ROWS;
+    }
+
+    /**
      * Check if the specified position is within the bounds of the board.
      * 
      * @param pos The position to check.
@@ -125,9 +127,30 @@ public class Board {
      * @throws GameLogicException If the coordinates are invalid.
      */
     public boolean isValid(Position pos) throws GameLogicException {
-        if (pos.col() < 0 || pos.col() >= GameConstants.BOARD_COLS || pos.row() < 0
-                || pos.row() >= GameConstants.BOARD_ROWS) {
+        if (!isWithinBounds(pos.col(), pos.row())) {
             throw new GameLogicException(ErrorMessage.OUT_OF_BOUNDS.format(pos));
+        }
+        return true;
+    }
+
+    /**
+     * Check if a move from one position to another is valid according to the game
+     * rules (e.g., within movement range).
+     * 
+     * @param fromPos The starting position of the move.
+     *                param toPos The target position of the move.
+     * @param toPos   The target position of the move.
+     * @return True if the move is valid, false otherwise.
+     * @throws GameLogicException If the move is invalid (e.g., exceeds movement
+     *                            range).
+     */
+    public boolean isValidMove(Position fromPos, Position toPos) throws GameLogicException {
+        if (isValid(fromPos) && isValid(toPos)) {
+            int colDiff = Math.abs(fromPos.col() - toPos.col());
+            int rowDiff = Math.abs(fromPos.row() - toPos.row());
+            if (Math.max(colDiff, rowDiff) > 1) {
+                throw new GameLogicException(ErrorMessage.INVALID_MOVE.format(fromPos.toString(), toPos.toString()));
+            }
         }
         return true;
     }
@@ -165,18 +188,5 @@ public class Board {
             }
         }
         return count;
-    }
-
-    // --- GETTERS ---
-
-    /**
-     * Returns the position of the King unit for the specified team.
-     * 
-     * @param team The team whose King's position is to be retrieved.
-     * @return The position of the King's unit for the specified team, or null if
-     *         not found.
-     */
-    public Position getKingPosition(Team team) {
-        return kingPositions.get(team);
     }
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import exceptions.GameLogicException;
 import exceptions.InvalidCommandException;
+import message.CliMessages;
 import model.Game;
 import model.Team;
 import model.Unit;
@@ -36,21 +37,21 @@ final class CommandYield {
     static List<String> execute(String[] parts, Game game) throws GameLogicException, InvalidCommandException {
         // Validate command format: "yield" or "yield <index>"
         if (parts.length > 2) {
-            throw new InvalidCommandException();
+            throw new InvalidCommandException(CliMessages.INVALID_FORMAT.get());
         }
 
         Team currentTeam = game.getCurrentTurn();
         Unit unitToDiscard = null;
 
         // If the player provided an index, validate it and determine which card to
-        // discard
+        // discard from the hand
         if (parts.length == 2) {
             try {
                 int idx = Integer.parseInt(parts[1]);
                 List<Unit> hand = currentTeam.getHand();
 
                 if (idx < 1 || idx > hand.size()) {
-                    throw new InvalidCommandException();
+                    throw new InvalidCommandException(CliMessages.INVALID_ARGS.get());
                 }
 
                 // Convert to 0-based index to retrieve Unit from List
@@ -58,7 +59,7 @@ final class CommandYield {
 
             } catch (NumberFormatException e) {
                 // If the second part is not a valid integer, it's an invalid command
-                throw new InvalidCommandException();
+                throw new InvalidCommandException(CliMessages.INVALID_FORMAT.get());
             }
         }
 

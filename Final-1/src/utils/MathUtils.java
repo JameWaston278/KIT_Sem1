@@ -6,6 +6,7 @@ package utils;
  * @author udqch
  */
 public final class MathUtils {
+
     private MathUtils() {
         // Private constructor to prevent instantiation of this utility class
     }

@@ -3,9 +3,9 @@ package model;
 import java.util.ArrayList;
 import java.util.List;
 
-import exceptions.ErrorMessage;
 import exceptions.GameLogicException;
-import utils.EventLog;
+import message.ErrorMessage;
+import message.EventLog;
 import utils.GameConstants;
 
 /**
@@ -32,12 +32,11 @@ final class TurnHelper {
     static List<String> startTurn(Game game, Team team) {
         List<String> logs = new ArrayList<>();
         team.resetAllMovedStatus();
-
-        logs.add(EventLog.TURN_START.format(team.getName()));
+        game.setHasPlaceUnitInTurn(false);
 
         if (team.isDeckEmpty()) {
             // If the team has no cards left to draw, they lose immediately.
-            Team winner = (team == game.getPlayer()) ? game.getEnemy() : game.getPlayer();
+            Team winner = (team == game.getTeam1()) ? game.getTeam2() : game.getTeam1();
             game.setWinner(winner);
             game.setGameOver(true);
             logs.add(EventLog.DECK_EMPTY.format(team.getName()));
@@ -87,8 +86,9 @@ final class TurnHelper {
             }
         }
 
-        Team nextTeam = (currentTeam == game.getPlayer()) ? game.getEnemy() : game.getPlayer();
+        Team nextTeam = (currentTeam == game.getTeam1()) ? game.getTeam2() : game.getTeam1();
         game.setCurrentTurn(nextTeam);
+        logs.add(EventLog.SWITCH_TURNS.format(nextTeam.getName()));
         logs.addAll(startTurn(game, nextTeam));
 
         return logs;

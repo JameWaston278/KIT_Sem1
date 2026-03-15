@@ -1,7 +1,7 @@
 package model;
 
-import exceptions.ErrorMessage;
 import exceptions.GameLogicException;
+import message.ErrorMessage;
 import utils.DisplayFormat;
 
 /**

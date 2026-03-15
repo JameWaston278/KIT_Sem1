@@ -8,8 +8,7 @@ import java.util.Random;
  * The RandomUtils class provides utility methods for performing weighted random
  * selections. It includes methods for both standard weighted random selection
  * and reverse weighted random selection, where higher weights are transformed
- * to
- * lower chances of selection.
+ * to lower chances of selection.
  *
  * @author udqch
  */
