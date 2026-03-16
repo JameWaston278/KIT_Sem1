@@ -2,7 +2,7 @@
 Daisy;Farmer;300;500
 Pitchfork;Farmer;400;400
 Stable;Farmer;500;300
-Manure;Spreader;600;600hand
+Manure;Spreader;600;600
 Potato;Farmer;700;500
 Fence;Farmer;300;1000
 Barn;Guard;400;900
