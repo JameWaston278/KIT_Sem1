@@ -27,9 +27,12 @@ public final class RandomUtils {
      * @return The index selected based on the weighted random selection.
      */
     public static int weightedRandom(List<Integer> inputWeights, Random random) {
+        if (inputWeights.size() == 1) {
+            return 0; // If there's only one weight, return its index
+        }
+
         List<Integer> weights = new ArrayList<>();
         int totalWeight = 0;
-
         for (int weight : inputWeights) {
             int validWeight = Math.max(weight, 0); // Ensure weights are non-negative
             weights.add(validWeight);
@@ -63,6 +66,10 @@ public final class RandomUtils {
      * @return The index selected based on the reverse weighted random selection.
      */
     public static int inverseWeightedRandom(List<Integer> inputWeights, Random random) {
+        if (inputWeights.size() == 1) {
+            return 0; // If there's only one weight, return its index
+        }
+
         // Find the maximum weight (k*) in the input list
         int kStar = Integer.MIN_VALUE;
         for (int weight : inputWeights) {

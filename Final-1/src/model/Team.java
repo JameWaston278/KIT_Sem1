@@ -1,10 +1,9 @@
 package model;
 
+import exceptions.GameLogicException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import exceptions.GameLogicException;
 import message.ErrorMessage;
 import utils.GameConstants;
 
@@ -23,6 +22,7 @@ public class Team {
     private final List<UnitTemplate> deck;
     private final List<Unit> hand;
     private final List<Unit> activeUnits;
+    private boolean isFirstRound = true; // Flag to track if it's the first round for the team
 
     /**
      * Constructor for the Team class, which initializes a team with a given name
@@ -36,6 +36,7 @@ public class Team {
         this.name = name;
         this.lp = GameConstants.INITIAL_LIFE_POINTS;
         this.king = new King(this);
+        this.king.setHidden(false); // The King starts revealed on the board
         this.deck = new ArrayList<>(deck);
         this.hand = new ArrayList<>();
         this.activeUnits = new ArrayList<>();
@@ -49,7 +50,7 @@ public class Team {
      * Constants.INIT_CARDS_IN_HAND.
      */
     public void drawInitialHand() {
-        for (int i = 0; i < GameConstants.MAX_HAND_SIZE - 1; i++) {
+        for (int i = 0; i < GameConstants.MAX_HAND_SIZE; i++) {
             this.drawCard();
         }
     }
@@ -197,5 +198,25 @@ public class Team {
      */
     public List<Unit> getActiveUnits() {
         return Collections.unmodifiableList(activeUnits);
+    }
+
+    /**
+     * Checks if it's the first round for the team. This can be used to determine
+     * if certain actions or effects should be applied only during the first round.
+     * 
+     * @return True if it's the first round for the team, false otherwise.
+     */
+    public boolean isFirstRound() {
+        return isFirstRound;
+    }
+
+    /**
+     * Sets the first round status for the team. This can be used to update the
+     * status after the first round has been completed.
+     * 
+     * @param isFirstRound The new first round status to be set for the team.
+     */
+    public void setFirstRound(boolean isFirstRound) {
+        this.isFirstRound = isFirstRound;
     }
 }

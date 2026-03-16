@@ -15,9 +15,9 @@ import utils.GameConstants;
 public class Board {
     // Direction vectors for counting units around a position
     private static final int[][] EIGHT_DIRECTIONS = {
-            { -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, -1 }, { 0, 1 }, { 1, -1 }, { 1, 0 }, { 1, 1 } };
+            { 0, 1 }, { 1, 1 }, { 1, 0 }, { 1, -1 }, { 0, -1 }, { -1, -1 }, { -1, 0 }, { -1, 1 } };
     // Direction vectors for counting units in orthogonal directions only
-    private static final int[][] FOUR_DIRECTIONS = { { -1, 0 }, { 0, -1 }, { 0, 1 }, { 1, 0 } };
+    private static final int[][] FOUR_DIRECTIONS = { { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 } };
 
     private final Unit[][] board;
 

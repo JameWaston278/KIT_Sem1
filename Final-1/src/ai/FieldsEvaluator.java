@@ -53,7 +53,7 @@ public class FieldsEvaluator {
         List<Position> possibleMoves = kingPos.getNeighbors(POSSIBLE_DIRECTIONS);
         List<ScoredActions<Position>> scoredFields = new ArrayList<>();
         for (Position move : possibleMoves) {
-            if (board.isOccupied(move) || !board.isWithinBounds(move.col(), move.row())) {
+            if (!board.isWithinBounds(move.col(), move.row()) || board.isOwnedBy(move, enemy)) {
                 continue; // Skip occupied or out-of-bounds positions
             }
             int steps = move.distanceTo(enemyKingPos);

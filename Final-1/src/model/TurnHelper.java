@@ -43,7 +43,11 @@ final class TurnHelper {
             return logs;
         }
 
-        team.drawCard();
+        if (team.isFirstRound()) {
+            team.setFirstRound(false); // Mark that the team has now completed their first round
+        } else {
+            team.drawCard();
+        }
         game.checkWinCondition(logs);
         return logs;
     }

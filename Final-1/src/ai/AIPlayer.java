@@ -1,11 +1,10 @@
 package ai;
 
+import exceptions.GameLogicException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-
-import exceptions.GameLogicException;
 import model.Board;
 import model.Game;
 import model.Position;
@@ -288,10 +287,6 @@ public class AIPlayer {
      * @return The chosen element.
      */
     private <T> T weightedRandom(List<T> candidates) {
-        if (candidates.size() == 1) {
-            return candidates.get(0);
-        }
-
         List<Integer> weights = new ArrayList<>(Collections.nCopies(candidates.size(), 1));
         int winnerIndex = RandomUtils.weightedRandom(weights, random);
         return candidates.get(winnerIndex);
