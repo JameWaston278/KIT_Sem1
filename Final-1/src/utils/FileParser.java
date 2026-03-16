@@ -39,7 +39,9 @@ public final class FileParser {
     public static List<String> readAndPrintFile(String filePath) throws IOException {
         Path path = Paths.get(filePath);
         List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
-        lines.forEach(System.out::println);
+        for (String line : lines) {
+            System.out.println(line);
+        }
         return lines;
     }
 
@@ -54,6 +56,12 @@ public final class FileParser {
      */
     public static List<UnitTemplate> parseUnits(List<String> lines) throws GameConfigurationException {
         List<UnitTemplate> templates = new ArrayList<>();
+        if (lines.isEmpty()) {
+            throw new GameConfigurationException(ConfigError.EMPTY_TEMPLATE.get());
+        }
+        if (lines.size() > 80) {
+            throw new GameConfigurationException(ConfigError.TOO_MANY_UNITS.get());
+        }
 
         for (String line : lines) {
             String[] parts = line.split(UNIT_SEPERATOR);

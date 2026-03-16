@@ -13,14 +13,21 @@ public enum FatalError {
     /** Error message for file reading issues. */
     FILE_ERROR("File reading error: "),
 
+    /** Error message for missing mandatory argument. */
+    MISSING_MANDATORY_ARGUMENT("Missing mandatory 'seed' or 'units' argument."),
+
     /** Error message for invalid number format in configuration. */
     INVALID_NUMBER_FORMAT("Invalid number format in configuration."),
     /** Error message for invalid argument format. */
     INVALID_ARGUMENT_FORMAT("Invalid or duplicate argument format."),
-    /** Error message for missing mandatory argument. */
-    MISSING_MANDATORY_ARGUMENT("Missing mandatory 'seed' or 'units' argument."),
+    /** Error message for duplicate team names. */
+    DUPLICATE_TEAM_NAMES("Team names must be different."),
+    /** Error message for team names that are too long. */
+    TEAM_NAME_TOO_LONG("Team names must be at most 14 characters long."),
+
     /** Error message for invalid deck configuration. */
     INVALID_DECK_CONFIGURATION("Invalid deck configuration. Provide either 'deck' OR both 'deck1' and 'deck2'."),
+
     /** Error message for invalid verbosity level. */
     INVALID_VERBOSITY_LEVEL("Verbosity must be either 'all' or 'compact'.");
 

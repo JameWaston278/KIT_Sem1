@@ -74,7 +74,7 @@ public final class RandomUtils {
         // Subtract k* from each weight to create a reverse list of weights
         List<Integer> newWeights = new ArrayList<>();
         for (int weight : inputWeights) {
-            newWeights.add(weight - kStar);
+            newWeights.add(kStar - weight);
         }
 
         return weightedRandom(newWeights, random);

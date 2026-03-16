@@ -2,10 +2,8 @@ package message;
 
 /**
  * The ErrorMessage enum defines a set of standardized error messages for
- * various
- * game logic exceptions. Each enum constant represents a specific error
- * scenario
- * that can occur during the game, such as invalid moves, out-of-bounds
+ * various game logic exceptions. Each enum constant represents a specific error
+ * scenario that can occur during the game, such as invalid moves, out-of-bounds
  * coordinates, or game over conditions. The enum provides methods to retrieve
  * the error message text and to format messages with dynamic content.
  * 
@@ -15,10 +13,10 @@ public enum ErrorMessage {
     // --- UNIT ERRORS ---
     /** Error message for when a unit has already moved this turn. */
     UNIT_ALREADY_MOVED("Unit %s has already moved this turn."),
+    /** Error message for when a unit has already flipped this turn. */
+    UNIT_ALREADY_FLIPPED("Unit %s has already flipped this turn."),
     /** Error message for when a unit can not be selected. */
     INVALID_UNIT("Invalid unit selected."),
-
-    //
     /** Error message for when a unit has already placed a unit this turn. */
     ALREADY_PLACED_UNIT("A unit has already been placed this turn."),
     /** Error message for when a unit is placed on a non-adjacent position. */
@@ -30,6 +28,7 @@ public enum ErrorMessage {
     /** Error message for when a card index is duplicated in hand. */
     DUPLICATE_CARD_INDEX("Duplicate card index %d in hand."),
 
+    // --- KING ERRORS ---
     /**
      * Error message for when a unit tries to attack but has already attacked this
      * turn.
@@ -41,6 +40,7 @@ public enum ErrorMessage {
      */
     KING_CANNOT_BLOCK("The King cannot block."),
 
+    // --- HAND ERRORS ---
     /** Error message for when a card is not in the player's hand. */
     CARD_NOT_IN_HAND("Card %s is not in hand."),
     /**
@@ -53,9 +53,9 @@ public enum ErrorMessage {
      */
     HAND_NOT_FULL("%s's hand is not full! No card needs to be discarded."),
 
+    // --- TURN AND GAME STATE ERRORS ---
     /** Error message for when a player tries to perform an action out of turn. */
     WRONG_TURN("It's not %s's turn."),
-
     /**
      * Error message for when a player tries to perform an action that is not
      * allowed in the current game state.
@@ -64,7 +64,7 @@ public enum ErrorMessage {
     /**
      * Error message for when a player tries to perform an invalid move action.
      */
-    INVALID_MOVE("Invalid move from %s to %s (exceeds movement range)."),
+    INVALID_MOVE_DISTANCE("Invalid move from %s to %s (exceeds movement range)."),
     /**
      * Error message for when a player tries to perform an action on a position that
      * is out of bounds.

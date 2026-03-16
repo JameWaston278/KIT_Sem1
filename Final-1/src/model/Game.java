@@ -1,9 +1,8 @@
 package model;
 
+import exceptions.GameLogicException;
 import java.util.ArrayList;
 import java.util.List;
-
-import exceptions.GameLogicException;
 import message.ErrorMessage;
 import message.EventLog;
 
@@ -161,11 +160,14 @@ public class Game {
         }
 
         if (unit.hasMoved()) {
-            throw new GameLogicException(ErrorMessage.UNIT_ALREADY_MOVED.format());
+            throw new GameLogicException(ErrorMessage.UNIT_ALREADY_MOVED.format(unit.getName()));
+        }
+        if (!unit.isHidden()) {
+            throw new GameLogicException(ErrorMessage.UNIT_ALREADY_FLIPPED.format(unit.getName()));
         }
 
         unit.setHidden(!unit.isHidden());
-        unit.setHasMoved(true);
+        unit.setHasMoved(false); // Flipping does not consume the move action
         logs.add(EventLog.FLIP.format(unit.getName(), unit.getAtk(), unit.getDef(), pos.toString()));
         return logs;
     }
@@ -188,14 +190,13 @@ public class Game {
         if (unit == null || !unit.getOwner().equals(team)) {
             throw new GameLogicException(ErrorMessage.INVALID_UNIT.format());
         }
-
         if (unit.hasMoved()) {
-            throw new GameLogicException(ErrorMessage.UNIT_ALREADY_MOVED.format());
+            throw new GameLogicException(ErrorMessage.UNIT_ALREADY_MOVED.format(unit.getName()));
         }
 
         unit.setBlocking(true);
         unit.setHasMoved(true);
-        logs.add(EventLog.BLOCKS.format(team.getName(), unit.getName()));
+        logs.add(EventLog.BLOCKS.format(unit.getName(), unit.getPosition().toString()));
         return logs;
     }
 

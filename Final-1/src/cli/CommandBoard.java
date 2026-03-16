@@ -7,10 +7,10 @@ import model.Unit;
 import utils.GameConstants;
 
 /**
- * Utility class for printing the game board to the console.
- * Handles both compact and detailed views, as well as highlighting the selected
- * position using either default symbols or a custom 29-character symbol set.
- * 
+ * Utility class for printing the game board to the console. Handles both
+ * compact and detailed views, as well as highlighting the selected position
+ * using either default symbols or a custom 29-character symbol set.
+ *
  * @author udqch
  */
 public final class CommandBoard {
@@ -18,7 +18,7 @@ public final class CommandBoard {
     private static final char NULL = '\0'; // Sentinel value for "no symbol"
 
     // --- STRINGS & FORMATS ---
-    private static final String COLUMN_NUMBERS = "    A   B   C   D   E   F   G  ";
+    private static final String COLUMN_NUMBERS = "    A   B   C   D   E   F   G";
     private static final String ROW_PADDING = "  ";
     private static final String EMPTY_CELL = "   ";
 
@@ -44,17 +44,16 @@ public final class CommandBoard {
 
     /**
      * Prints the game board to the console with appropriate formatting. It
-     * highlights
-     * the selected position and uses either default symbols or custom symbols for
-     * the borders.
-     * 
+     * highlights the selected position and uses either default symbols or
+     * custom symbols for the borders.
+     *
      * @param game          The game instance containing the board and current team
      * @param selectedPos   The currently selected position on the board (can be
      *                      null).
      * @param isCompact     Whether to print in compact mode (borders only between
-     *                      rows
-     * @param customSymbols An optional array of 29 custom symbols for borders and
-     *                      corners. If null, default symbols are used.
+     *                      rows).
+     * @param customSymbols An optional array of 29 custom symbols for borders
+     *                      and corners. If null, default symbols are used.
      */
     public static void printBoard(Game game, Position selectedPos, boolean isCompact,
             char[] customSymbols) {
@@ -99,7 +98,6 @@ public final class CommandBoard {
     }
 
     // --- FORMAT UNIT ---
-
     private static String formatUnit(Unit unit, Game game) {
         if (unit == null) {
             return EMPTY_CELL;
@@ -120,7 +118,6 @@ public final class CommandBoard {
     }
 
     // --- SYMBOL RESOLVERS ---
-
     private static char getHorizontalSymbol(int row, int col, Position selectedPos, char[] c) {
         boolean selected = selectedPos != null && selectedPos.col() == col
                 && (selectedPos.row() == row || selectedPos.row() == row - 1);

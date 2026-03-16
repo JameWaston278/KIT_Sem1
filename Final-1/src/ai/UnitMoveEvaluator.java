@@ -24,8 +24,8 @@ public class UnitMoveEvaluator {
 
     private static final int[][] POSSIBLE_DIRECTIONS = { { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 } };
     private static final ActionType[] DIRECTION_TYPES = {
-            ActionType.MOVE_UP, ActionType.MOVE_RIGHT,
-            ActionType.MOVE_DOWN, ActionType.MOVE_LEFT };
+        ActionType.MOVE_UP, ActionType.MOVE_RIGHT,
+        ActionType.MOVE_DOWN, ActionType.MOVE_LEFT};
 
     private final Board board;
     private final Team fellow;

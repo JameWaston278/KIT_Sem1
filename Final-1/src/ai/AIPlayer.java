@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.function.ToIntFunction;
 
 import exceptions.GameLogicException;
 import model.Board;
@@ -26,6 +23,39 @@ import utils.RandomUtils;
  * @author udqch
  */
 public class AIPlayer {
+    /**
+     * A functional interface for scoring items.
+     * 
+     * @param <T> The type of the item to score.
+     */
+    @FunctionalInterface
+    interface Scorer<T> {
+        /**
+         * Returns the score for the given item.
+         *
+         * @param item The item to score.
+         * @return The score for the item.
+         */
+        int getScore(T item);
+    }
+
+    /**
+     * A functional interface for extracting values from items.
+     *
+     * @param <T> The type of the item to extract from.
+     * @param <R> The type of the value to extract.
+     */
+    @FunctionalInterface
+    interface Extractor<T, R> {
+        /**
+         * Extracts a value from the given item.
+         *
+         * @param item The item to extract from.
+         * @return The extracted value.
+         */
+        R extract(T item);
+    }
+
     private final Game game;
     private final Board board;
     private final Team aiTeam;
@@ -52,28 +82,29 @@ public class AIPlayer {
      * Executes the AI player's turn by evaluating and performing the best moves for
      * the King, placements, and active units.
      *
-     * @param stepCallback A callback function that accepts a list of log messages
-     *                     after each phase of the AI's turn.
+     * @param aiStepCallback A callback interface to receive updates after each step
+     *                       of
+     *                       the AI's turn.
      * @throws GameLogicException If there is an error during move execution.
      */
-    public void playTurn(BiConsumer<List<String>, Position> stepCallback) throws GameLogicException {
+    public void playTurn(AIStepListener aiStepCallback) throws GameLogicException {
 
-        moveKingPhase(stepCallback);
+        moveKingPhase(aiStepCallback);
         if (game.isGameOver()) {
             return;
         }
 
-        placeUnitPhase(stepCallback);
+        placeUnitPhase(aiStepCallback);
         if (game.isGameOver()) {
             return;
         }
 
-        moveUnitPhase(stepCallback);
+        moveUnitPhase(aiStepCallback);
         if (game.isGameOver()) {
             return;
         }
 
-        endTurnPhase(stepCallback);
+        endTurnPhase(aiStepCallback);
     }
 
     /**
@@ -81,19 +112,19 @@ public class AIPlayer {
      *
      * @throws GameLogicException If there is an error during move execution.
      */
-    private void moveKingPhase(BiConsumer<List<String>, Position> stepCallback) throws GameLogicException {
+    private void moveKingPhase(AIStepListener listener) throws GameLogicException {
         Position kingPos = aiTeam.getKing().getPosition();
         KingEvaluator kingEvaluator = new KingEvaluator(board, aiTeam, enemyTeam);
         List<ScoredActions<Position>> scoredMoves = kingEvaluator.scoreMove(kingPos);
 
         // Find the maximum score among the scored moves
-        List<Position> bestMoves = findBestOptions(scoredMoves, ScoredActions::score, ScoredActions::action);
+        List<Position> bestMoves = findBestOptions(scoredMoves, item -> item.score(), item -> item.action());
         // Randomly select one of the best moves
         Position chosenMove = weightedRandom(bestMoves);
 
         // Move the King to the chosen position
         List<String> logs = game.executeMove(aiTeam, kingPos, chosenMove);
-        stepCallback.accept(logs, chosenMove);
+        listener.onStepExecuted(logs, chosenMove);
     }
 
     /**
@@ -101,7 +132,7 @@ public class AIPlayer {
      *
      * @throws GameLogicException If there is an error during move execution.
      */
-    private void placeUnitPhase(BiConsumer<List<String>, Position> stepCallback) throws GameLogicException {
+    private void placeUnitPhase(AIStepListener listener) throws GameLogicException {
         Position kingPos = aiTeam.getKing().getPosition();
         FieldsEvaluator fieldsEvaluator = new FieldsEvaluator(board, aiTeam, enemyTeam);
         List<ScoredActions<Position>> scoredFields = fieldsEvaluator.scorePlacement(kingPos);
@@ -111,7 +142,7 @@ public class AIPlayer {
         }
 
         // Find the maximum score among the scored placements
-        List<Position> bestFields = findBestOptions(scoredFields, ScoredActions::score, ScoredActions::action);
+        List<Position> bestFields = findBestOptions(scoredFields, item -> item.score(), item -> item.action());
         // Randomly select one of the best fields
         Position chosenField = weightedRandom(bestFields);
 
@@ -122,7 +153,7 @@ public class AIPlayer {
         if (chosenUnit != null) {
             int oneBasedIndex = aiTeam.getHand().indexOf(chosenUnit) + 1; // Convert to 1-based index for logging
             List<String> logs = game.executePlace(aiTeam, List.of(oneBasedIndex), chosenField);
-            stepCallback.accept(logs, chosenField);
+            listener.onStepExecuted(logs, chosenField);
         }
     }
 
@@ -132,7 +163,7 @@ public class AIPlayer {
      *
      * @throws GameLogicException If there is an error during move execution.
      */
-    private void moveUnitPhase(BiConsumer<List<String>, Position> stepCallback) throws GameLogicException {
+    private void moveUnitPhase(AIStepListener listener) throws GameLogicException {
         UnitMoveEvaluator unitMoveEvaluator = new UnitMoveEvaluator(board, aiTeam, enemyTeam);
 
         while (true) {
@@ -142,7 +173,7 @@ public class AIPlayer {
             }
 
             // Find the maximum score among all evaluated units
-            List<EvaluatedUnit> bestUnits = findBestOptions(allUnits, EvaluatedUnit::totalScore, u -> u);
+            List<EvaluatedUnit> bestUnits = findBestOptions(allUnits, u -> u.totalScore(), u -> u);
             // Randomly select one of the best units
             EvaluatedUnit bestUnit = weightedRandom(bestUnits);
             // Find the best action for the chosen unit
@@ -163,7 +194,7 @@ public class AIPlayer {
                 logs.addAll(game.executeMove(aiTeam, fromPos, targetPos));
             }
 
-            stepCallback.accept(logs, targetPos);
+            listener.onStepExecuted(logs, targetPos);
             if (game.isGameOver()) {
                 break;
             }
@@ -176,7 +207,7 @@ public class AIPlayer {
      *
      * @throws GameLogicException If there is an error during move execution.
      */
-    private void endTurnPhase(BiConsumer<List<String>, Position> stepCallback) throws GameLogicException {
+    private void endTurnPhase(AIStepListener listener) throws GameLogicException {
         List<Unit> hand = aiTeam.getHand();
         Unit discardedUnit = null;
         if (hand.size() >= GameConstants.MAX_HAND_SIZE) {
@@ -191,7 +222,7 @@ public class AIPlayer {
             discardedUnit = hand.get(discardIndex);
         }
         List<String> logs = game.endTurn(aiTeam, discardedUnit);
-        stepCallback.accept(logs, null);
+        listener.onStepExecuted(logs, null);
     }
 
     // --- HELPER METHODS ---
@@ -278,17 +309,17 @@ public class AIPlayer {
      * @param getValue A function to extract the value to return for each item.
      * @return A list of values corresponding to the items with the highest score.
      */
-    private <T, R> List<R> findBestOptions(List<T> options, ToIntFunction<T> getScore, Function<T, R> getValue) {
+    private <T, R> List<R> findBestOptions(List<T> options, Scorer<T> scorer, Extractor<T, R> extractor) {
         int maxScore = Integer.MIN_VALUE;
         List<R> bestValues = new ArrayList<>();
         for (T option : options) {
-            int score = getScore.applyAsInt(option);
+            int score = scorer.getScore(option);
             if (score > maxScore) {
                 maxScore = score;
                 bestValues.clear();
-                bestValues.add(getValue.apply(option));
+                bestValues.add(extractor.extract(option));
             } else if (score == maxScore) {
-                bestValues.add(getValue.apply(option));
+                bestValues.add(extractor.extract(option));
             }
         }
         return bestValues;

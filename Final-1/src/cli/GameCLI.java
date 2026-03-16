@@ -5,7 +5,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.function.BiConsumer;
 
 import ai.AIPlayer;
 import exceptions.GameLogicException;
@@ -18,16 +17,16 @@ import utils.DisplayFormat;
 import utils.GameConstants;
 
 /**
- * The CliParser class is responsible for parsing and executing user
- * commands in the command-line interface (CLI) of the game.
- * It interacts with the Game model and the AI Controller to process user inputs
- * and update the game state accordingly.
- * 
+ * The CliParser class is responsible for parsing and executing user commands in
+ * the command-line interface (CLI) of the game. It interacts with the Game
+ * model and the AI Controller to process user inputs and update the game state
+ * accordingly.
+ *
  * @author udqch
  */
 public class GameCLI {
+
     private static final String REGEX_WHITESPACE = "\\s+";
-    private static final String INPUT_REMINDER = "> ";
     private final Game game;
     private final AIPlayer aiController;
     private final Scanner scanner;
@@ -39,6 +38,7 @@ public class GameCLI {
 
     @FunctionalInterface
     private interface CommandHandler {
+
         List<String> execute(String[] parts) throws GameLogicException, InvalidCommandException;
     }
 
@@ -74,14 +74,15 @@ public class GameCLI {
         commandHandlers.put(Command.YIELD, this::handleYield);
         commandHandlers.put(Command.STATE, this::handleState);
         commandHandlers.put(Command.QUIT, parts -> {
+            requireArgs(parts, 1);
             this.isRunning = false;
             return List.of();
         });
     }
 
     /**
-     * Starts the CLI game loop, processing user commands until the game is over or
-     * the user quits.
+     * Starts the CLI game loop, processing user commands until the game is over
+     * or the user quits.
      *
      * @throws GameLogicException If any game logic errors occur during command
      *                            execution.
@@ -106,7 +107,6 @@ public class GameCLI {
                 }
 
                 // Read user input (player's turn)
-                System.out.print(INPUT_REMINDER);
                 String input = scanner.nextLine().trim();
                 if (input.isEmpty()) {
                     continue; // Skip empty input
@@ -117,11 +117,9 @@ public class GameCLI {
     }
 
     private void playAITurn() {
-        BiConsumer<List<String>, Position> aiStepCallback = (stepLogs, targetPos) -> {
+        ai.AIStepListener aiStepCallback = (stepLogs, targetPos) -> {
             if (stepLogs != null && !stepLogs.isEmpty()) { // Print logs from the AI's step and update the board display
-                for (String log : stepLogs) {
-                    System.out.println(log);
-                }
+                printLogs(stepLogs);
                 if (targetPos != null) {
                     printBoardAndSelection(targetPos);
                 }
@@ -174,7 +172,6 @@ public class GameCLI {
     }
 
     // --- COMMAND HANDLERS ---
-
     private List<String> handleSelect(String[] parts) throws GameLogicException, InvalidCommandException {
         requireArgs(parts, 2);
         this.selectedPosition = parsePosition(parts[1]);
@@ -258,7 +255,6 @@ public class GameCLI {
     }
 
     // --- HELPER METHODS ---
-
     private void checkIfSelected() throws InvalidCommandException {
         if (this.selectedPosition == null) {
             throw new InvalidCommandException(CliMessages.NO_SELECTION.get());

@@ -133,28 +133,6 @@ public class Board {
         return true;
     }
 
-    /**
-     * Check if a move from one position to another is valid according to the game
-     * rules (e.g., within movement range).
-     * 
-     * @param fromPos The starting position of the move.
-     *                param toPos The target position of the move.
-     * @param toPos   The target position of the move.
-     * @return True if the move is valid, false otherwise.
-     * @throws GameLogicException If the move is invalid (e.g., exceeds movement
-     *                            range).
-     */
-    public boolean isValidMove(Position fromPos, Position toPos) throws GameLogicException {
-        if (isValid(fromPos) && isValid(toPos)) {
-            int colDiff = Math.abs(fromPos.col() - toPos.col());
-            int rowDiff = Math.abs(fromPos.row() - toPos.row());
-            if (Math.max(colDiff, rowDiff) > 1) {
-                throw new GameLogicException(ErrorMessage.INVALID_MOVE.format(fromPos.toString(), toPos.toString()));
-            }
-        }
-        return true;
-    }
-
     // --- COUNTERS ---
 
     /**

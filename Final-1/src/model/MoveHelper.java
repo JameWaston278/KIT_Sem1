@@ -43,9 +43,12 @@ final class MoveHelper {
         if (unit == null || !unit.getOwner().equals(team)) {
             throw new GameLogicException(ErrorMessage.INVALID_UNIT.format());
         }
-
         if (unit.hasMoved()) {
             throw new GameLogicException(ErrorMessage.UNIT_ALREADY_MOVED.format(unit.getName()));
+        }
+        if (fromPos.distanceTo(toPos) > 1) {
+            throw new GameLogicException(
+                    ErrorMessage.INVALID_MOVE_DISTANCE.format(fromPos.toString(), toPos.toString()));
         }
 
         if (unit.isKing()) {

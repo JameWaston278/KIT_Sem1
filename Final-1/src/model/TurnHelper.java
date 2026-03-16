@@ -57,7 +57,7 @@ final class TurnHelper {
      * @param game          The game instance to operate on.
      * @param team          The team whose turn is ending.
      * @param unitToDiscard The unit to discard from the team's hand if their hand
-     *                      is full. If the hand is not full, this should be
+     *                      is full. If the hand is not full, this should be null.
      * @return A list of event log messages generated during progress.
      * @throws GameLogicException If there is an error during end turn processing,
      *                            such as trying to discard a card when the hand
