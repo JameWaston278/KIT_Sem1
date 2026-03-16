@@ -1,9 +1,8 @@
 package model;
 
+import exceptions.GameLogicException;
 import java.util.ArrayList;
 import java.util.List;
-
-import exceptions.GameLogicException;
 import logic.Duel;
 import logic.DuelResult;
 import logic.combination.UnitCombiner;
@@ -40,12 +39,7 @@ final class MoveHelper {
         Board board = game.getBoard();
         Unit unit = board.getUnitAt(fromPos);
 
-        if (unit == null || !unit.getOwner().equals(team)) {
-            throw new GameLogicException(ErrorMessage.INVALID_UNIT.format());
-        }
-        if (unit.hasMoved()) {
-            throw new GameLogicException(ErrorMessage.UNIT_ALREADY_MOVED.format(unit.getName()));
-        }
+        game.validateUnit(team, fromPos);
         if (fromPos.distanceTo(toPos) > 1) {
             throw new GameLogicException(
                     ErrorMessage.INVALID_MOVE_DISTANCE.format(fromPos.toString(), toPos.toString()));

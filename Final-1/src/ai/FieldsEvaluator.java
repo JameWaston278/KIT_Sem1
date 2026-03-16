@@ -1,9 +1,8 @@
 package ai;
 
+import exceptions.GameLogicException;
 import java.util.ArrayList;
 import java.util.List;
-
-import exceptions.GameLogicException;
 import model.Board;
 import model.Position;
 import model.Team;

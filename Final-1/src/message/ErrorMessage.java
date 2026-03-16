@@ -39,6 +39,11 @@ public enum ErrorMessage {
      * turn.
      */
     KING_CANNOT_BLOCK("The King cannot block."),
+    /**
+     * Error message for when a unit tries to flip but has already flipped this
+     * turn.
+     */
+    KING_CANNOT_FLIP("The King cannot flip."),
 
     // --- HAND ERRORS ---
     /** Error message for when a card is not in the player's hand. */

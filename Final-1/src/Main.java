@@ -197,7 +197,7 @@ public final class Main {
         if (!argsMap.containsKey(KEY_VERBOSITY)) {
             return false; // Default to compact if verbosity is not specified
         }
-        
+
         String status = argsMap.get(KEY_VERBOSITY);
         if (!status.equals(VERBOSITY_ALL) && !status.equals(VERBOSITY_COMPACT)) {
             throw new FatalSetupException(FatalError.INVALID_VERBOSITY_LEVEL.get());

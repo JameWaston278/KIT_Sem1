@@ -155,12 +155,9 @@ public class Game {
         List<String> logs = new ArrayList<>();
         Unit unit = board.getUnitAt(pos);
 
-        if (unit == null || !unit.getOwner().equals(team)) {
-            throw new GameLogicException(ErrorMessage.INVALID_UNIT.format());
-        }
-
-        if (unit.hasMoved()) {
-            throw new GameLogicException(ErrorMessage.UNIT_ALREADY_MOVED.format(unit.getName()));
+        validateUnit(team, pos);
+        if (unit.isKing()) {
+            throw new GameLogicException(ErrorMessage.KING_CANNOT_FLIP.format());
         }
         if (!unit.isHidden()) {
             throw new GameLogicException(ErrorMessage.UNIT_ALREADY_FLIPPED.format(unit.getName()));
@@ -187,11 +184,9 @@ public class Game {
         List<String> logs = new ArrayList<>();
         Unit unit = board.getUnitAt(pos);
 
-        if (unit == null || !unit.getOwner().equals(team)) {
-            throw new GameLogicException(ErrorMessage.INVALID_UNIT.format());
-        }
-        if (unit.hasMoved()) {
-            throw new GameLogicException(ErrorMessage.UNIT_ALREADY_MOVED.format(unit.getName()));
+        validateUnit(team, pos);
+        if (unit.isKing()) {
+            throw new GameLogicException(ErrorMessage.KING_CANNOT_BLOCK.format());
         }
 
         unit.setBlocking(true);
@@ -221,6 +216,27 @@ public class Game {
     public List<String> executePlace(Team team, List<Integer> handIndices, Position position)
             throws GameLogicException {
         return PlaceUnitHelper.placeUnit(this, team, handIndices, position);
+    }
+
+    /**
+     * Validates that the unit at the specified position belongs to the given team
+     * and has not already moved this turn. This method is used to ensure that
+     * actions are being performed on valid units according to game rules.
+     *
+     * @param team     The team that should own the unit at the specified position.
+     * @param position The position of the unit to validate.
+     * @throws GameLogicException If there is no unit at the position, if the unit
+     *                            does not belong to the team, or if the unit has
+     *                            already moved this turn.
+     */
+    void validateUnit(Team team, Position position) throws GameLogicException {
+        Unit unit = board.getUnitAt(position);
+        if (unit == null || !unit.getOwner().equals(team)) {
+            throw new GameLogicException(ErrorMessage.INVALID_UNIT.format());
+        }
+        if (unit.hasMoved()) {
+            throw new GameLogicException(ErrorMessage.UNIT_ALREADY_MOVED.format(unit.getName()));
+        }
     }
 
     /**

@@ -1,11 +1,10 @@
 package model;
 
+import exceptions.GameLogicException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import exceptions.GameLogicException;
 import logic.combination.UnitCombiner;
 import message.ErrorMessage;
 import message.EventLog;
@@ -134,7 +133,7 @@ final class PlaceUnitHelper {
             // unit
             game.getBoard().placeUnitAt(newUnit, pos);
             team.addActiveUnit(newUnit);
-            newUnit.setHasMoved(true);
+            newUnit.setHasMoved(false);
             logs.add(EventLog.COMBINE_FAIL.format(targetUnit.getName()));
         }
     }

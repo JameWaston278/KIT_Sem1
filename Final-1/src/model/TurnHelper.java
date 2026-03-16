@@ -1,9 +1,8 @@
 package model;
 
+import exceptions.GameLogicException;
 import java.util.ArrayList;
 import java.util.List;
-
-import exceptions.GameLogicException;
 import message.ErrorMessage;
 import message.EventLog;
 import utils.GameConstants;

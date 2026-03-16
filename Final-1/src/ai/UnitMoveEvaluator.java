@@ -1,9 +1,8 @@
 package ai;
 
+import exceptions.GameLogicException;
 import java.util.ArrayList;
 import java.util.List;
-
-import exceptions.GameLogicException;
 import logic.combination.UnitCombiner;
 import model.Board;
 import model.Position;
@@ -24,8 +23,8 @@ public class UnitMoveEvaluator {
 
     private static final int[][] POSSIBLE_DIRECTIONS = { { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 } };
     private static final ActionType[] DIRECTION_TYPES = {
-        ActionType.MOVE_UP, ActionType.MOVE_RIGHT,
-        ActionType.MOVE_DOWN, ActionType.MOVE_LEFT};
+            ActionType.MOVE_UP, ActionType.MOVE_RIGHT,
+            ActionType.MOVE_DOWN, ActionType.MOVE_LEFT };
 
     private final Board board;
     private final Team fellow;
@@ -135,6 +134,9 @@ public class UnitMoveEvaluator {
 
         // Situation 2: new position is occupied by an allied unit
         if (targetUnit.getOwner() == fellow) {
+            if (targetUnit.isKing()) {
+                return -9999;
+            }
             Unit combinedUnit = UnitCombiner.combine(unit, targetUnit);
             if (combinedUnit != null) {
                 // If a combination is possible, calculate the score based on the combined

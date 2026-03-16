@@ -20,7 +20,7 @@ public class LikeMindedRule implements CombineRule {
     public CombineStats check(Unit a, Unit b) {
         int gcdAtk = MathUtils.gcd(a.getAtk(), b.getAtk());
         int gcdDef = MathUtils.gcd(a.getDef(), b.getDef());
-        int g3T = MathUtils.gcd(gcdAtk, gcdDef);
+        int g3T = Math.max(gcdAtk, gcdDef);
         if (g3T > 100) {
             int newAtk = a.getAtk() + b.getAtk() - g3T;
             int newDef = a.getDef() + b.getDef() - g3T;

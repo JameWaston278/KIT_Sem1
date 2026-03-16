@@ -21,7 +21,7 @@ public class PrimeRule implements CombineRule {
     public CombineStats check(Unit a, Unit b) {
         int gcdAtk = MathUtils.gcd(a.getAtk(), b.getAtk());
         int gcdDef = MathUtils.gcd(a.getDef(), b.getDef());
-        int g3T = MathUtils.gcd(gcdAtk, gcdDef);
+        int g3T = Math.max(gcdAtk, gcdDef);
         if (g3T == 100
                 && ((MathUtils.isPrime(a.getAtk() / 100) && MathUtils.isPrime(b.getAtk() / 100))
                         || (MathUtils.isPrime(a.getDef() / 100) && MathUtils.isPrime(b.getDef() / 100)))) {
