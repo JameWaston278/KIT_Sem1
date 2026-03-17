@@ -62,7 +62,6 @@ public class KingEvaluator {
                 // 1 if there's a fellow unit on the move position, 0 otherwise
                 int fellowPresent = ((board.isOwnedBy(move, fellow)) && !move.equals(kingPos)) ? 1 : 0;
                 int score = fellows - 2 * enemies - distance - 3 * fellowPresent;
-                System.out.println("King moves to " + move.toString() + ": " + score);
                 scoredMoves.add(new ScoredActions<>(move, score));
             }
         }

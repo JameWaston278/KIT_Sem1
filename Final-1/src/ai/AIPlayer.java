@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import message.EventLog;
 import model.Board;
 import model.Game;
 import model.Position;
@@ -142,17 +143,28 @@ public class AIPlayer {
 
         // Find the maximum score among the scored placements
         List<Position> bestFields = findBestOptions(scoredFields, item -> item.score(), item -> item.action());
-        // Randomly select one of the best fields
         Position chosenField = weightedRandom(bestFields);
 
         // Randomly select an unit from the player's hand to place on the chosen field
-        Unit chosenUnit = chooseUnitToPlace(aiTeam.getHand());
+        int chosenUnitIndex = chooseUnitToPlace(aiTeam.getHand());
 
         // Place the chosen unit on the chosen field
-        if (chosenUnit != null) {
-            int oneBasedIndex = aiTeam.getHand().indexOf(chosenUnit) + 1; // Convert to 1-based index for logging
+        if (chosenUnitIndex != -1) {
+            int oneBasedIndex = chosenUnitIndex + 1; // Convert to 1-based index
             List<String> logs = game.executePlace(aiTeam, List.of(oneBasedIndex), chosenField);
-            listener.onStepExecuted(logs, chosenField);
+
+            boolean isPlacementFailed = false;
+            for (String log : logs) {
+                if (log.contains(EventLog.COMBINE_FAIL.getTemplate())) {
+                    isPlacementFailed = true;
+                    break;
+                }
+            }
+            if (isPlacementFailed) {
+                listener.onStepExecuted(logs, kingPos);
+            } else {
+                listener.onStepExecuted(logs, chosenField);
+            }
         }
     }
 
@@ -193,10 +205,12 @@ public class AIPlayer {
                 logs.addAll(game.executeMove(aiTeam, fromPos, targetPos));
             }
 
-            listener.onStepExecuted(logs, targetPos);
+            Position displayPos = (game.isGameOver() && game.getCurrentTurn().equals(aiTeam)) ? fromPos : targetPos;
+            listener.onStepExecuted(logs, displayPos);
             if (game.isGameOver()) {
                 break;
             }
+
         }
     }
 
@@ -232,11 +246,11 @@ public class AIPlayer {
      * value of the units.
      *
      * @param hand The list of units in the player's hand.
-     * @return The chosen unit to place, or null if the hand is empty.
+     * @return The index of the chosen unit to place, or null if the hand is empty.
      */
-    private Unit chooseUnitToPlace(List<Unit> hand) {
+    private int chooseUnitToPlace(List<Unit> hand) {
         if (hand.isEmpty()) {
-            return null; // No units to place
+            return -1; // No units to place
         }
 
         List<Integer> weights = new ArrayList<>();
@@ -244,8 +258,7 @@ public class AIPlayer {
             weights.add(unit.getAtk());
         }
 
-        int chosenIndex = RandomUtils.weightedRandom(weights, random);
-        return hand.get(chosenIndex);
+        return RandomUtils.weightedRandom(weights, random);
     }
 
     /**
@@ -287,6 +300,9 @@ public class AIPlayer {
      * @return The chosen element.
      */
     private <T> T weightedRandom(List<T> candidates) {
+        if (candidates.size() == 1) {
+            return candidates.get(0); // Only one candidate, return it directly
+        }
         List<Integer> weights = new ArrayList<>(Collections.nCopies(candidates.size(), 1));
         int winnerIndex = RandomUtils.weightedRandom(weights, random);
         return candidates.get(winnerIndex);
@@ -305,8 +321,8 @@ public class AIPlayer {
      * @return A list of values corresponding to the items with the highest score.
      */
     private <T, R> List<R> findBestOptions(List<T> options, Scorer<T> scorer, Extractor<T, R> extractor) {
-        int maxScore = Integer.MIN_VALUE;
         List<R> bestValues = new ArrayList<>();
+        int maxScore = Integer.MIN_VALUE;
         for (T option : options) {
             int score = scorer.getScore(option);
             if (score > maxScore) {

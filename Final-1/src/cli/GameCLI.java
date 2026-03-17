@@ -1,14 +1,13 @@
 package cli;
 
+import ai.AIPlayer;
+import exceptions.GameLogicException;
+import exceptions.InvalidCommandException;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-
-import ai.AIPlayer;
-import exceptions.GameLogicException;
-import exceptions.InvalidCommandException;
 import message.CliMessages;
 import model.Game;
 import model.Position;
@@ -192,7 +191,6 @@ public class GameCLI {
         Position targetPos = parsePosition(parts[1]);
         List<String> logs = game.executeMove(game.getCurrentTurn(), this.selectedPosition, targetPos);
         this.selectedPosition = targetPos;
-
         return logs;
     }
 
