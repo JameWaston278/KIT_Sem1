@@ -1,0 +1,170 @@
+package io;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import domain.graph.Difficulty;
+import domain.graph.Lift;
+import domain.graph.LiftType;
+import domain.graph.Node;
+import domain.graph.Piste;
+import domain.graph.SkiGraph;
+import domain.graph.Surface;
+import exceptions.ParseError;
+import exceptions.ParseException;
+import exceptions.SkiException;
+
+/****
+ * The MermaidParser class is responsible for parsing a Mermaid graph definition
+ * from a specified file and constructing a SkiGraph object representing the ski
+ * resort. The input file should follow a specific format where nodes represent
+ * lifts and pistes, and edges represent connections between them. The parser
+ * validates the input format and constructs the graph accordingly, throwing
+ * exceptions if any errors are encountered during parsing.
+ *
+ * @author udqch
+ */
+public class MermaidParser {
+
+    private static final Pattern TRANSIT_LIFT_PATTERN = Pattern.compile(
+            "^([a-zA-Z0-9_]+)\\s*\\[\\[\\1<br/>([A-Z]+);\\s*([0-9]{2}:[0-9]{2});\\s*([0-9]{2}:[0-9]{2});\\s*([0-9]+);\\s*([0-9]+)\\]\\]$");
+    private static final Pattern REGULAR_LIFT_PATTERN = Pattern.compile(
+            "^([a-zA-Z0-9_]+)\\s*\\[\\1<br/>([A-Z]+);\\s*([0-9]{2}:[0-9]{2});\\s*([0-9]{2}:[0-9]{2});\\s*([0-9]+);\\s*([0-9]+)\\]$");
+    private static final Pattern PISTE_PATTERN = Pattern.compile(
+            "^([a-zA-Z0-9_]+)\\s*\\(\\[\\1<br/>([A-Z]+);\\s*([A-Z]+);\\s*([0-9]+);\\s*([0-9]+)\\]\\)$");
+    private static final Pattern EDGE_PATTERN = Pattern.compile(
+            "^([a-zA-Z0-9_]+)\\s*-->\\s*([a-zA-Z0-9_]+)$");
+    private static final String EDGE_CONNECTION = "-->";
+
+    /**
+     * Parses a Mermaid graph definition from the specified file and constructs a
+     * SkiGraph object representing the ski resort. The input file should follow
+     * a specific format where nodes represent lifts and pistes, and edges
+     * represent connections between them.
+     *
+     * @param filePath the path to the input file containing the Mermaid graph
+     *                 definition
+     * @return a SkiGraph object representing the ski resort defined in the input
+     *         file
+     * @throws ParseException if there is an error reading the file or if the file
+     *                        format is invalid
+     */
+    public SkiGraph parse(String filePath) throws ParseException {
+        SkiGraph graph = new SkiGraph();
+        List<String> edgeLines = new ArrayList<>();
+
+        try {
+            List<String> lines = Files.readAllLines(Path.of(filePath));
+            if (lines.isEmpty() || lines.get(0).trim().isEmpty()) {
+                throw new ParseException(ParseError.INVALID_FILE.getMessage());
+            }
+
+            for (int i = 1; i < lines.size(); i++) {
+                String line = lines.get(i).trim();
+                if (line.isEmpty()) {
+                    continue;
+                }
+                if (line.contains(EDGE_CONNECTION)) {
+                    edgeLines.add(line);
+                } else {
+                    parseNode(line, graph);
+                }
+            }
+
+            for (String line : edgeLines) {
+                parseEdge(line, graph);
+            }
+
+            graph.validate();
+        } catch (IOException e) {
+            throw new ParseException(ParseError.CANNOT_READ_FILE.getMessage(filePath));
+        } catch (SkiException e) {
+            throw new ParseException(e.getMessage());
+        }
+        return graph;
+    }
+
+    private void parseNode(String line, SkiGraph graph) throws ParseException {
+        Matcher transitMatcher = TRANSIT_LIFT_PATTERN.matcher(line);
+        if (transitMatcher.matches()) {
+            graph.addNode(createLift(transitMatcher, true));
+            return;
+        }
+
+        Matcher regularMatcher = REGULAR_LIFT_PATTERN.matcher(line);
+        if (regularMatcher.matches()) {
+            graph.addNode(createLift(regularMatcher, false));
+            return;
+        }
+
+        Matcher pisteMatcher = PISTE_PATTERN.matcher(line);
+        if (pisteMatcher.matches()) {
+            graph.addNode(createPiste(pisteMatcher));
+            return;
+        }
+
+        // If the line doesn't match any known pattern, it's an invalid file format
+        throw new ParseException(ParseError.INVALID_FILE.getMessage());
+    }
+
+    private void parseEdge(String line, SkiGraph graph) throws ParseException {
+        Matcher edgeMatcher = EDGE_PATTERN.matcher(line);
+        if (edgeMatcher.matches()) {
+            String fromId = edgeMatcher.group(1);
+            String toId = edgeMatcher.group(2);
+
+            Node fromNode = graph.getNodeById(fromId);
+            Node toNode = graph.getNodeById(toId);
+            if (fromNode == null || toNode == null) {
+                throw new ParseException(ParseError.UNRECOGNIZED_NODE.getMessage(fromId, toId));
+            }
+
+            graph.addEdge(fromNode, toNode);
+            return;
+        }
+        throw new ParseException(ParseError.INVALID_FILE.getMessage());
+    }
+
+    private Lift createLift(Matcher matcher, boolean isTalstation) throws ParseException {
+        try {
+            return new Lift(
+                    matcher.group(1),
+                    LiftType.fromString(matcher.group(2))
+                            .orElseThrow(() -> new ParseException(
+                                    ParseError.INVALID_FORMAT.getMessage(LiftType.class, matcher.group(1)))),
+                    LocalTime.parse(matcher.group(3)),
+                    LocalTime.parse(matcher.group(4)),
+                    Integer.parseInt(matcher.group(5)),
+                    Integer.parseInt(matcher.group(6)),
+                    isTalstation);
+        } catch (DateTimeParseException e) {
+            throw new ParseException(ParseError.INVALID_FORMAT.getMessage(LocalTime.class, matcher.group(1)));
+        } catch (NumberFormatException e) {
+            throw new ParseException(ParseError.INVALID_FORMAT.getMessage(Integer.class, matcher.group(1)));
+        }
+    }
+
+    private Piste createPiste(Matcher matcher) throws ParseException {
+        try {
+            return new Piste(
+                    matcher.group(1),
+                    Difficulty.fromString(matcher.group(2))
+                            .orElseThrow(() -> new ParseException(
+                                    ParseError.INVALID_FORMAT.getMessage(Difficulty.class, matcher.group(1)))),
+                    Surface.fromString(matcher.group(3))
+                            .orElseThrow(() -> new ParseException(
+                                    ParseError.INVALID_FORMAT.getMessage(Surface.class, matcher.group(1)))),
+                    Integer.parseInt(matcher.group(4)),
+                    Integer.parseInt(matcher.group(5)));
+        } catch (NumberFormatException e) {
+            throw new ParseException(ParseError.INVALID_FORMAT.getMessage(Integer.class, matcher.group(1)));
+        }
+    }
+}
