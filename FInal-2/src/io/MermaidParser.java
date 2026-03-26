@@ -1,8 +1,5 @@
 package io;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -20,6 +17,7 @@ import domain.graph.Surface;
 import exceptions.ParseError;
 import exceptions.ParseException;
 import exceptions.SkiException;
+import utils.EnumParser;
 
 /****
  * The MermaidParser class is responsible for parsing a Mermaid graph definition
@@ -49,25 +47,23 @@ public class MermaidParser {
      * a specific format where nodes represent lifts and pistes, and edges
      * represent connections between them.
      *
-     * @param filePath the path to the input file containing the Mermaid graph
-     *                 definition
+     * @param contents a list of strings representing the lines of the input file
      * @return a SkiGraph object representing the ski resort defined in the input
      *         file
      * @throws ParseException if there is an error reading the file or if the file
      *                        format is invalid
      */
-    public SkiGraph parse(String filePath) throws ParseException {
+    public SkiGraph parse(List<String> contents) throws ParseException {
         SkiGraph graph = new SkiGraph();
         List<String> edgeLines = new ArrayList<>();
 
         try {
-            List<String> lines = Files.readAllLines(Path.of(filePath));
-            if (lines.isEmpty() || lines.get(0).trim().isEmpty()) {
+            if (contents.isEmpty() || contents.get(0).trim().isEmpty()) {
                 throw new ParseException(ParseError.INVALID_FILE.getMessage());
             }
 
-            for (int i = 1; i < lines.size(); i++) {
-                String line = lines.get(i).trim();
+            for (int i = 1; i < contents.size(); i++) {
+                String line = contents.get(i).trim();
                 if (line.isEmpty()) {
                     continue;
                 }
@@ -83,8 +79,6 @@ public class MermaidParser {
             }
 
             graph.validate();
-        } catch (IOException e) {
-            throw new ParseException(ParseError.CANNOT_READ_FILE.getMessage(filePath));
         } catch (SkiException e) {
             throw new ParseException(e.getMessage());
         }
@@ -136,7 +130,7 @@ public class MermaidParser {
         try {
             return new Lift(
                     matcher.group(1),
-                    LiftType.fromString(matcher.group(2))
+                    EnumParser.parseEnum(LiftType.class, matcher.group(2))
                             .orElseThrow(() -> new ParseException(
                                     ParseError.INVALID_FORMAT.getMessage(LiftType.class, matcher.group(1)))),
                     LocalTime.parse(matcher.group(3)),
@@ -155,10 +149,10 @@ public class MermaidParser {
         try {
             return new Piste(
                     matcher.group(1),
-                    Difficulty.fromString(matcher.group(2))
+                    EnumParser.parseEnum(Difficulty.class, matcher.group(2))
                             .orElseThrow(() -> new ParseException(
                                     ParseError.INVALID_FORMAT.getMessage(Difficulty.class, matcher.group(1)))),
-                    Surface.fromString(matcher.group(3))
+                    EnumParser.parseEnum(Surface.class, matcher.group(3))
                             .orElseThrow(() -> new ParseException(
                                     ParseError.INVALID_FORMAT.getMessage(Surface.class, matcher.group(1)))),
                     Integer.parseInt(matcher.group(4)),

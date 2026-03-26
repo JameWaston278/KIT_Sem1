@@ -44,15 +44,9 @@ public enum Command {
     /**
      * Returns the keyword associated with this command.
      * 
-     * @param text the input text to match against the command keywords
      * @return the keyword for this command
      */
-    public static Command fromString(String text) {
-        for (Command cmd : Command.values()) {
-            if (cmd.keyword.equals(text)) {
-                return cmd;
-            }
-        }
-        return null;
+    public String getKeyword() {
+        return keyword;
     }
 }

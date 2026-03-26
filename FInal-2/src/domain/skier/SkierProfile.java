@@ -8,9 +8,8 @@ import domain.graph.Surface;
 
 /****
  * The SkierProfile class represents the profile of a skier, including their
- * skill
- * level, skiing goals, and preferences for different types of ski routes. It
- * allows setting and retrieving the skier's skill, goal, and preferences for
+ * skill level, skiing goals, and preferences for different types of ski routes.
+ * It allows setting and retrieving the skier's skill, goal, and preferences for
  * route difficulty and surface type.
  *
  * @author udqch

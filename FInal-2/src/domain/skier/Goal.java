@@ -1,10 +1,11 @@
 package domain.skier;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
+import domain.graph.Node;
 import domain.graph.Piste;
 
 /**
@@ -20,7 +21,7 @@ public enum Goal {
      */
     ALTITUDE {
         @Override
-        public int calculateUtility(List<Piste> pistes) {
+        public int calculate(List<Piste> pistes) {
             int sum = 0;
             for (Piste piste : pistes) {
                 sum += piste.getElevationDrop();
@@ -33,7 +34,7 @@ public enum Goal {
      */
     DISTANCE {
         @Override
-        public int calculateUtility(List<Piste> pistes) {
+        public int calculate(List<Piste> pistes) {
             int sum = 0;
             for (Piste piste : pistes) {
                 sum += piste.getLength();
@@ -46,7 +47,7 @@ public enum Goal {
      */
     NUMBER {
         @Override
-        public int calculateUtility(List<Piste> pistes) {
+        public int calculate(List<Piste> pistes) {
             return pistes.size();
         }
     },
@@ -55,41 +56,35 @@ public enum Goal {
      */
     UNIQUE {
         @Override
-        public int calculateUtility(List<Piste> pistes) {
+        public int calculate(List<Piste> pistes) {
             Set<Piste> uniquePistes = new HashSet<>(pistes);
             return uniquePistes.size();
         }
     };
 
     /**
+     * Calculates the utility of a list of nodes based on the specific goal.
+     *
+     * @param rawPath the list of nodes for which to calculate the utility
+     * @return the calculated utility value for the given list of nodes
+     */
+    public int calculateUtility(List<Node> rawPath) {
+        List<Piste> pistes = new ArrayList<>();
+        for (Node node : rawPath) {
+            if (node instanceof Piste piste) {
+                pistes.add(piste);
+            }
+        }
+        return calculate(pistes);
+    }
+
+    /**
      * Abstract method to calculate the utility of a list of pistes based on the
-     * specific goal. Each goal will have its own implementation of how to
-     * calculate the utility.
+     * specific criteria of the goal. Each enum constant must implement this method
+     * to provide its own calculation logic.
      *
      * @param pistes the list of pistes for which to calculate the utility
      * @return the calculated utility value for the given list of pistes
      */
-    public abstract int calculateUtility(List<Piste> pistes);
-
-    /**
-     * Converts a string to a Goal enum value. The conversion is case-insensitive
-     * and ignores leading/trailing whitespace.
-     *
-     * @param text the string to convert
-     * @return an Optional containing the corresponding Goal, or an empty
-     *         Optional if the input is invalid
-     */
-    public static Optional<Goal> fromString(String text) {
-        if (text == null || text.trim().isEmpty()) {
-            return Optional.empty();
-        }
-
-        String normalizedText = text.trim().toUpperCase();
-        for (Goal goal : Goal.values()) {
-            if (goal.name().equals(normalizedText)) {
-                return Optional.of(goal);
-            }
-        }
-        return Optional.empty();
-    }
+    protected abstract int calculate(List<Piste> pistes);
 }

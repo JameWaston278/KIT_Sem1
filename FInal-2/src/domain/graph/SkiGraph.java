@@ -26,15 +26,15 @@ public class SkiGraph {
     private final Map<Node, List<Node>> adjacencyList = new HashMap<>();
 
     // public void printGraph() {
-    //     for (Node node : nodes.values()) {
-    //         System.out.println(node.getId());
-    //         List<Node> adjacentNodes = adjacencyList.get(node);
-    //         if (adjacentNodes != null) {
-    //             for (Node adjacent : adjacentNodes) {
-    //                 System.out.println("  --> " + adjacent.getId());
-    //             }
-    //         }
-    //     }
+    // for (Node node : nodes.values()) {
+    // System.out.println(node.getId());
+    // List<Node> adjacentNodes = adjacencyList.get(node);
+    // if (adjacentNodes != null) {
+    // for (Node adjacent : adjacentNodes) {
+    // System.out.println(" --> " + adjacent.getId());
+    // }
+    // }
+    // }
     // }
 
     /**
@@ -189,11 +189,11 @@ public class SkiGraph {
      *
      * @return an unmodifiable list of all lift nodes
      */
-    public List<Node> getAllLifts() {
-        List<Node> lifts = new ArrayList<>();
+    public List<Lift> getAllLifts() {
+        List<Lift> lifts = new ArrayList<>();
         for (Node node : nodes.values()) {
-            if (node instanceof Lift) {
-                lifts.add(node);
+            if (node instanceof Lift lift) {
+                lifts.add(lift);
             }
         }
         return Collections.unmodifiableList(lifts);
@@ -204,11 +204,11 @@ public class SkiGraph {
      *
      * @return an unmodifiable list of all piste nodes
      */
-    public List<Node> getAllPistes() {
-        List<Node> pistes = new ArrayList<>();
+    public List<Piste> getAllPistes() {
+        List<Piste> pistes = new ArrayList<>();
         for (Node node : nodes.values()) {
-            if (node instanceof Piste) {
-                pistes.add(node);
+            if (node instanceof Piste piste) {
+                pistes.add(piste);
             }
         }
         return Collections.unmodifiableList(pistes);

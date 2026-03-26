@@ -7,13 +7,26 @@ package exceptions;
  *
  * @author udqch
  */
-public enum CLIError {
-    INVALID_ARGS("Invalid number of arguments for command %s. Expected %d but got %d."),
+public enum CommandError {
+
+    /** Error indicating that a required argument for a command is missing. */
     UNKNOWN_COMMAND("Unknown command: %s."),
+    /**
+     * Error indicating that the number of arguments provided for a command is
+     * invalid.
+     */
+    INVALID_NUMBER_ARGS("Invalid number of arguments for command %s. Expected %d but got %d."),
+    /** Error indicating that an argument provided for a command is invalid. */
+    INVALID_ARGUMENT("Invalid argument for command %s: %s."),
+    /**
+     * Error indicating that a time argument provided for a command is in an invalid
+     * format.
+     */
+    INVALID_TIME_FORMAT("Invalid time format. Expected format is HH:mm.");
 
     private final String message;
 
-    CLIError(String message) {
+    CommandError(String message) {
         this.message = message;
     }
 

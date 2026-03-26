@@ -1,7 +1,5 @@
 package domain.graph;
 
-import java.util.Optional;
-
 /**
  * Enum representing the difficulty levels of ski slopes.
  * Each difficulty level has an associated modifier that can be used to
@@ -31,29 +29,5 @@ public enum Difficulty {
      */
     public double getModifier() {
         return this.modifier;
-    }
-
-    /**
-     * Converts a string to a Difficulty enum value.
-     * The conversion is case-insensitive and ignores leading/trailing whitespace.
-     *
-     * @param text the string to convert
-     * @return an Optional containing the corresponding Difficulty, or an empty
-     *         Optional if the input is invalid
-     */
-    public static Optional<Difficulty> fromString(String text) {
-        if (text == null || text.trim().isEmpty()) {
-            return Optional.empty();
-        }
-
-        // Iterate through the Difficulty values to find a match
-        String normalizedText = text.trim().toUpperCase();
-        for (Difficulty diff : Difficulty.values()) {
-            if (diff.name().equals(normalizedText)) {
-                return Optional.of(diff);
-            }
-        }
-
-        return Optional.empty();
     }
 }

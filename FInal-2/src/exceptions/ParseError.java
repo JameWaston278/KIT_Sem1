@@ -9,21 +9,36 @@ package exceptions;
  */
 public enum ParseError {
 
+    /** Error indicating that the input file cannot be read. */
     CANNOT_READ_FILE("Cannot read the input file %s."),
+    /**
+     * Error indicating that the input file is empty or does not start with "graph".
+     */
     INVALID_FILE("The input file must not be empty and start with \"graph\"."),
+    /** Error indicating that a line in the input file is malformed. */
     INVALID_FORMAT("Invalid %s format in %s."),
+    /** Error indicating that a line in the input file is malformed. */
     UNRECOGNIZED_NODE("Unrecognized node in connection %s and %s."),
 
     /** Error indicating that a line in the input file is malformed. */
     EXISTING_NODE("Node with ID %s already exists."),
+    /** Error indicating that a line in the input file is malformed. */
     SELF_LOOP("A node cannot have an edge to itself."),
 
+    /** Error indicating that the graph must contain at least one piste. */
     NO_PISTE("The graph must contain at least one piste."),
+    /** Error indicating that the graph must contain at least one talstation. */
     NO_TALSTATION("The graph must contain at least one talstation."),
 
+    /**
+     * Error indicating that a connection between two nodes of the same type is
+     * invalid.
+     */
     INVALID_CONNECTION("Invalid connection between same node type: %s and %s."),
 
+    /** Error indicating that the graph cannot be empty. */
     EMPTY_GRAPH("The graph cannot be empty."),
+    /** Error indicating that the graph must be fully connected. */
     NOT_CONNECTED("The graph must be fully connected.");
 
     private final String message;

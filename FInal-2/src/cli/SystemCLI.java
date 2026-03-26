@@ -1,12 +1,29 @@
 package cli;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Scanner;
 
-import exceptions.CLIError;
-import exceptions.InvalidCommandException;
+import core.SkiEngine;
+import domain.graph.Difficulty;
+import domain.graph.SkiGraph;
+import domain.graph.Surface;
+import domain.skier.Goal;
+import domain.skier.Preference;
+import domain.skier.Skill;
+import exceptions.CommandError;
+import exceptions.CommandException;
 import exceptions.SkiException;
+import io.MermaidParser;
+import utils.EnumParser;
+import utils.GraphFormatter;
 
 /****
  * The SystemCLI class is responsible for handling the command-line interface
@@ -20,6 +37,35 @@ import exceptions.SkiException;
  */
 public class SystemCLI {
     private static final String REGEX_WHITESPACE = "\\s+";
+
+    private static final String MSG_ROUTE_PLANNED = "route planned";
+    private static final String MSG_ROUTE_ABORTED = "route aborted";
+    private static final String MSG_ROUTE_FINISHED = "route finished!";
+    private static final String MSG_NO_ALTERNATIVE = "no alternative found";
+    private static final String MSG_AVOIDED = "avoided %s";
+    private static final String MSG_FAILED_LOAD_GRAPH = "failed to load graph from file: %s";
+
+    private enum LoadTarget {
+        AREA
+    }
+
+    private enum ListTarget {
+        LIFTS, SLOPES
+    }
+
+    private enum SetTarget {
+        SKILL, GOAL
+    }
+
+    private enum PreferenceTarget {
+        PREFERENCES
+    }
+
+    private enum ShowTarget {
+        ROUTE
+    }
+
+    private final SkiEngine engine;
     private final Scanner scanner;
 
     private boolean isRunning;
@@ -34,10 +80,11 @@ public class SystemCLI {
     /**
      * Constructs a new SystemCLI instance and initializes the command handlers.
      *
-     * @throws InvalidCommandException if there is an error initializing the command
-     *                                 handlers
+     * @throws CommandException if there is an error initializing the command
+     *                          handlers
      */
-    public SystemCLI() throws InvalidCommandException {
+    public SystemCLI() throws CommandException {
+        this.engine = new SkiEngine();
         this.scanner = new Scanner(System.in);
 
         this.isRunning = true;
@@ -50,8 +97,9 @@ public class SystemCLI {
         commandHandlers.put(Command.LOAD, this::handleLoad);
         commandHandlers.put(Command.LIST, this::handleList);
         commandHandlers.put(Command.SET, this::handleSet);
-        commandHandlers.put(Command.LIKE, this::handleLike);
-        commandHandlers.put(Command.DISLIKE, this::handleDislike);
+        commandHandlers.put(Command.LIKE, parts -> this.handlePreference(parts, Preference.LIKE));
+        commandHandlers.put(Command.DISLIKE, parts -> this.handlePreference(parts, Preference.DISLIKE));
+        commandHandlers.put(Command.RESET, this::handleReset);
         commandHandlers.put(Command.PLAN, this::handlePlan);
         commandHandlers.put(Command.ABORT, this::handleAbort);
         commandHandlers.put(Command.NEXT, this::handleNext);
@@ -68,35 +116,187 @@ public class SystemCLI {
      */
     public void start() throws SkiException {
         while (isRunning) {
-            String input = scanner.nextLine().trim();
-            if (input.isEmpty()) {
-                continue;
+            try {
+                String input = scanner.nextLine().trim();
+                if (input.isEmpty()) {
+                    continue;
+                }
+                processCommand(input);
+            } catch (SkiException e) {
+                System.out.println(e.getMessage());
             }
-            processCommand(input);
         }
     }
 
     private void processCommand(String input) throws SkiException {
         String[] parts = input.split(REGEX_WHITESPACE);
-        Command command = Command.fromString(parts[0]);
-        try {
-            if (command == null) {
-                throw new InvalidCommandException(CLIError.UNKNOWN_COMMAND.getMessage(parts[0]));
-            }
 
-            CommandHandler handler = commandHandlers.get(command);
-            if (handler != null) {
-                handler.execute(parts);
-            }
-        } catch (SkiException e) {
-            System.out.println(e.getMessage());
+        Command command = EnumParser.parseEnum(Command.class, parts[0])
+                .orElseThrow(() -> new CommandException(CommandError.UNKNOWN_COMMAND.getMessage(parts[0])));
+
+        CommandHandler handler = commandHandlers.get(command);
+        if (handler != null) {
+            handler.execute(parts);
         }
     }
 
-    private void requireArgs(String[] parts, int expected) throws InvalidCommandException {
-        if (parts.length != expected) {
-            throw new InvalidCommandException(
-                    CLIError.INVALID_ARGS.getMessage(parts[0], expected - 1, parts.length - 1));
+    private void handleLoad(String[] parts) throws SkiException {
+        // Expected format: load area <file_path>
+        requireArgs(parts, 3);
+        LoadTarget target = parseEnumArgs(parts[0], parts[1], LoadTarget.class);
+
+        if (target == LoadTarget.AREA) {
+            String filePath = parts[2];
+            try {
+                List<String> rawContents = Files.readAllLines(Path.of(filePath));
+
+                MermaidParser parser = new MermaidParser();
+                SkiGraph graph = parser.parse(rawContents);
+                engine.setGraph(graph);
+
+                System.out.println(String.join(System.lineSeparator(), rawContents));
+            } catch (IOException e) {
+                throw new CommandException(MSG_FAILED_LOAD_GRAPH.formatted(e.getMessage()));
+            }
         }
+    }
+
+    private void handleList(String[] parts) throws SkiException {
+        // Expected format: list lifts|slopes
+        requireArgs(parts, 2);
+        ListTarget target = parseEnumArgs(parts[0], parts[1], ListTarget.class);
+
+        String output = (target == ListTarget.LIFTS)
+                ? GraphFormatter.listLifts(engine.getGraph())
+                : GraphFormatter.listPistes(engine.getGraph());
+
+        if (!output.isEmpty()) {
+            System.out.println(output);
+        }
+    }
+
+    private void handleSet(String[] parts) throws SkiException {
+        // Expected format: set skill|goal <value>
+        requireArgs(parts, 3);
+        SetTarget target = parseEnumArgs(parts[0], parts[1], SetTarget.class);
+
+        if (target == SetTarget.SKILL) {
+            Skill skill = parseEnumArgs(parts[0], parts[2], Skill.class);
+            engine.setSkill(skill);
+        } else {
+            Goal goal = parseEnumArgs(parts[0], parts[2], Goal.class);
+            engine.setGoal(goal);
+        }
+    }
+
+    private void handlePreference(String[] parts, Preference preference) throws SkiException {
+        // Expected format: like|dislike <difficulty>|<surface>
+        requireArgs(parts, 2);
+
+        // First try parsing as Difficulty
+        Optional<Difficulty> difficultyOpt = EnumParser.parseEnum(Difficulty.class, parts[1]);
+        if (difficultyOpt.isPresent()) {
+            engine.setPreference(difficultyOpt.get(), preference);
+            return;
+        }
+        // Then try parsing as Surface
+        Optional<Surface> surfaceOpt = EnumParser.parseEnum(Surface.class, parts[1]);
+        if (surfaceOpt.isPresent()) {
+            engine.setPreference(surfaceOpt.get(), preference);
+            return;
+        }
+
+        // If neither parsing succeeded, throw an error
+        throw new CommandException(CommandError.INVALID_ARGUMENT.getMessage(parts[0], parts[1]));
+    }
+
+    private void handleReset(String[] parts) throws SkiException {
+        // Expected format: reset preferences
+        requireArgs(parts, 2);
+        PreferenceTarget target = parseEnumArgs(parts[0], parts[1], PreferenceTarget.class);
+
+        if (target == PreferenceTarget.PREFERENCES) {
+            engine.resetPreferences();
+        }
+    }
+
+    private void handlePlan(String[] parts) throws SkiException {
+        // Expected format: plan <id> <startTime> <endTime>
+        requireArgs(parts, 4);
+
+        String startNodeId = parts[1];
+        try {
+            LocalTime startTime = LocalTime.parse(parts[2]);
+            LocalTime endTime = LocalTime.parse(parts[3]);
+
+            engine.planRoute(startNodeId, startTime, endTime);
+            System.out.println(MSG_ROUTE_PLANNED);
+        } catch (DateTimeParseException e) {
+            throw new CommandException(CommandError.INVALID_TIME_FORMAT.getMessage());
+        }
+    }
+
+    private void handleAbort(String[] parts) throws SkiException {
+        // Expected format: abort
+        requireArgs(parts, 1);
+        engine.resetEngine();
+        System.out.println(MSG_ROUTE_ABORTED);
+    }
+
+    private void handleNext(String[] parts) throws SkiException {
+        // Expected format: next
+        requireArgs(parts, 1);
+        String nextStepId = engine.showNextStep();
+        if (nextStepId != null) {
+            System.out.println(nextStepId);
+        } else {
+            System.out.println(MSG_ROUTE_FINISHED);
+        }
+    }
+
+    private void handleTake(String[] parts) throws SkiException {
+        // Expected format: take
+        requireArgs(parts, 1);
+        engine.takeNextStep();
+    }
+
+    private void handleAlternative(String[] parts) throws SkiException {
+        // Expected format: alternative
+        requireArgs(parts, 1);
+        String avoidedId = engine.findAlternativeRoute();
+        if (avoidedId != null) {
+            System.out.println(MSG_AVOIDED.formatted(avoidedId));
+        } else {
+            System.out.println(MSG_NO_ALTERNATIVE);
+        }
+    }
+
+    private void handleShow(String[] parts) throws SkiException {
+        // Expected format: show preferences
+        requireArgs(parts, 2);
+        ShowTarget target = parseEnumArgs(parts[0], parts[1], ShowTarget.class);
+
+        if (target == ShowTarget.ROUTE) {
+            System.out.println(engine.showCurrentRoute());
+        }
+    }
+
+    // --- HELPER METHODS ---
+
+    // Validates that the number of arguments provided matches the expected count.
+    private void requireArgs(String[] parts, int expected) throws CommandException {
+        if (parts.length != expected) {
+            throw new CommandException(
+                    CommandError.INVALID_NUMBER_ARGS.getMessage(parts[0], expected - 1, parts.length - 1));
+        }
+    }
+
+    /// Parses an argument as an enum value and provides detailed error messages if
+    /// parsing fails.
+    private <T extends Enum<T>> T parseEnumArgs(String command, String args, Class<T> enumClass)
+            throws CommandException {
+        return EnumParser.parseEnum(enumClass, args)
+                .orElseThrow(() -> new CommandException(
+                        CommandError.INVALID_ARGUMENT.getMessage(command, args)));
     }
 }

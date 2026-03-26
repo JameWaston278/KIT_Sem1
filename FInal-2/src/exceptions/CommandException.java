@@ -7,7 +7,7 @@ package exceptions;
  * 
  * @author udqch
  */
-public class InvalidCommandException extends SkiException {
+public class CommandException extends SkiException {
     private static final String ERROR_PREFIX = "invalid command: ";
 
     /**
@@ -15,7 +15,7 @@ public class InvalidCommandException extends SkiException {
      *
      * @param message the detail message explaining the reason for the exception
      */
-    public InvalidCommandException(String message) {
+    public CommandException(String message) {
         super(ERROR_PREFIX + message);
     }
 }

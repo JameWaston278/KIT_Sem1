@@ -1,7 +1,5 @@
 package domain.graph;
 
-import java.util.Optional;
-
 /**
  * Enum representing the surface conditions of ski slopes.
  * Each surface condition has an associated modifier that can be used to
@@ -31,29 +29,5 @@ public enum Surface {
      */
     public double getModifier() {
         return this.modifier;
-    }
-
-    /**
-     * Converts a string to a Surface enum value.
-     * The conversion is case-insensitive and ignores leading/trailing whitespace.
-     *
-     * @param text the string to convert
-     * @return an Optional containing the corresponding Surface, or an empty
-     *         Optional if the input is invalid
-     */
-    public static Optional<Surface> fromString(String text) {
-        if (text == null || text.trim().isEmpty()) {
-            return Optional.empty();
-        }
-
-        // Iterate through the Surface values to find a match
-        String normalizedText = text.trim().toUpperCase();
-        for (Surface surface : Surface.values()) {
-            if (surface.name().equals(normalizedText)) {
-                return Optional.of(surface);
-            }
-        }
-
-        return Optional.empty();
     }
 }
