@@ -9,7 +9,7 @@ package exceptions;
  */
 public class ParseException extends SkiException {
 
-    private static final String ERROR_PREFIX = "parsing failed: ";
+    private static final String ERROR_PREFIX = "(parsing error) ";
 
     /**
      * Constructs a new ParseException with the specified error message.

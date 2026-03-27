@@ -1,5 +1,7 @@
 package cli;
 
+import java.util.Optional;
+
 /**
  * Enum representing the different commands that can be used in the ski resort
  * management system. Each command has an associated keyword that can be used to
@@ -48,5 +50,21 @@ public enum Command {
      */
     public String getKeyword() {
         return keyword;
+    }
+
+    /**
+     * Parses a string to find the corresponding Command enum value.
+     *
+     * @param text the input string to parse
+     * @return an Optional containing the matching Command, or empty if no match is
+     *         found
+     */
+    public static Optional<Command> fromString(String text) {
+        for (Command cmd : Command.values()) {
+            if (cmd.keyword.equals(text.trim())) {
+                return Optional.of(cmd);
+            }
+        }
+        return Optional.empty();
     }
 }

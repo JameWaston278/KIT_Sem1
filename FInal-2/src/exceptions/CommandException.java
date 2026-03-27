@@ -8,7 +8,7 @@ package exceptions;
  * @author udqch
  */
 public class CommandException extends SkiException {
-    private static final String ERROR_PREFIX = "invalid command: ";
+    private static final String ERROR_PREFIX = "(invalid command) ";
 
     /**
      * Constructs a new InvalidCommandException with the specified error message.

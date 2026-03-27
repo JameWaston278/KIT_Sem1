@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import domain.graph.Lift;
 import domain.graph.Node;
 import exceptions.RoutingError;
 import exceptions.RoutingException;
@@ -46,19 +45,12 @@ public class RoutePlanner {
      *                          during route planning
      */
     public Optional<Route> planRoute(RouteRequest request) throws RoutingException {
-        validateInputs(request.startNode(), request.startTime(), request.endTime());
-
-        RoutingSession session = new RoutingSession(request);
-        return session.findRoute(request.startNode(), request.startTime());
-    }
-
-    private void validateInputs(Node startNode, LocalTime startTime, LocalTime endTime) throws RoutingException {
-        if (!(startNode instanceof Lift) || !((Lift) startNode).isTalstation()) {
-            throw new RoutingException(RoutingError.INVALID_START_NODE.getMessage());
-        }
-        if (startTime == null || endTime == null || endTime.isBefore(startTime)) {
+        if (request.startTime() == null || request.endTime() == null
+                || request.endTime().isBefore(request.startTime())) {
             throw new RoutingException(RoutingError.INVALID_TIME_CONSTRAINTS.getMessage());
         }
+        RoutingSession session = new RoutingSession(request);
+        return session.findRoute(request.startNode(), request.startTime());
     }
 
     // Inner class to manage the state of the routing session, including the current
@@ -83,12 +75,12 @@ public class RoutePlanner {
         private void dfs(Node currentNode, LocalTime currentTime, List<Node> currentPath) {
             // Check if the current node is a goal node (talstation lift) and if the current
             // path is valid
-            if (currentNode.equals(request.endNode()) && currentPath.size() > 1) {
+            if (hasReachedDestination(currentNode) && currentPath.size() > 1) {
                 updateBestRoute(currentPath, currentTime);
             }
 
             for (Node neighbor : request.graph().getAdjacencyNodes(currentNode)) {
-                if (request.forbiddenNodes().contains(neighbor)) {
+                if (currentPath.size() == 1 && request.forbiddenNodes().contains(neighbor)) {
                     continue; // Skip forbidden nodes
                 }
 
@@ -107,6 +99,15 @@ public class RoutePlanner {
                     }
                 }
             }
+        }
+
+        private boolean hasReachedDestination(Node currentNode) {
+            for (Node neighbor : request.graph().getAdjacencyNodes(currentNode)) {
+                if (neighbor.getId().equals(request.endNode().getId())) {
+                    return true; // Reached the destination node
+                }
+            }
+            return false;
         }
 
         // Helper method to update the best route if the current route is better than

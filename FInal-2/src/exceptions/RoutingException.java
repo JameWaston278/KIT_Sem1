@@ -10,7 +10,7 @@ package exceptions;
  */
 public class RoutingException extends SkiException {
 
-    private static final String ERROR_PREFIX = "routing error: ";
+    private static final String ERROR_PREFIX = "(routing error) ";
 
     /**
      * Constructs a new RoutingException with the specified error message.

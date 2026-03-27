@@ -19,11 +19,6 @@ public enum RoutingError {
     GRAPH_NOT_LOADED("No graph loaded. Please load a graph before planning a route."),
     /** Error indicating that no valid route was found for the given constraints. */
     NO_ROUTE_FOUND("No valid route found for the given constraints."),
-    /**
-     * Error indicating that no valid route can be found with the current
-     * preferences.
-     */
-    NO_ROUTE_WITH_PREFERENCES("New preferences make it impossible to find a valid route."),
     /** Error indicating that no active route is available. */
     NO_ACTIVE_ROUTE("No active route. Please plan a route first."),
     /** Error indicating that the user has already reached the destination. */

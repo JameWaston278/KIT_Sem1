@@ -54,14 +54,15 @@ public final class TimeCalculator {
     // Helper method to calculate time spent on a piste based on its attributes and
     // the skier's profile
     private long calculatePisteTime(Piste piste, SkierProfile skier) {
-        double length = piste.getLength() / 8;
+        double lengthBase = piste.getLength() / 8.0;
         double difficultyMod = piste.getDifficulty().getModifier();
         double surfaceMod = piste.getSurface().getModifier();
-        double elevationDrop = (1 + 2 * piste.getElevationDrop());
+        double r = (double) piste.getElevationDrop() / piste.getLength();
         double skillMod = skier.getSkill().getModifier();
 
-        long timeInSeconds = (long) (length * difficultyMod * surfaceMod * elevationDrop * skillMod);
-        return timeInSeconds;
+        double timeInSeconds = lengthBase * difficultyMod * surfaceMod * (1 + 2 * r) * skillMod;
+
+        return (long) timeInSeconds;
     }
 
     private long calculateLiftTime(Lift lift, LocalTime currentTime) {

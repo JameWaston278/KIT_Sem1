@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import domain.graph.Difficulty;
+import domain.graph.Lift;
 import domain.graph.Node;
 import domain.graph.SkiGraph;
 import domain.graph.Surface;
@@ -124,22 +125,34 @@ public class SkiEngine {
      *                          invalid input or no valid route found
      */
     public void planRoute(String startNodeId, LocalTime startTime, LocalTime endTime) throws RoutingException {
-        requireActiveRoute();
         Node startNode = graph.getNodeById(startNodeId);
         if (startNode == null) {
             throw new RoutingException(RoutingError.INVALID_START_NODE.getMessage());
         }
+        if (!(startNode instanceof Lift) || !((Lift) startNode).isTalstation()) {
+            throw new RoutingException(RoutingError.INVALID_START_NODE.getMessage());
+        }
 
-        // Create a route request and use the planner to find a route
-        RouteRequest request = new RouteRequest(graph, skier, startNode, startNode, startTime, endTime);
-        Optional<Route> foundRoute = planner.planRoute(request);
-        if (foundRoute.isEmpty()) {
+        // Calculate the time spent on the first node to determine the starting time for
+        // the DFS
+        TimeCalculator timeCalculator = new TimeCalculator();
+        long firstNodeTime = timeCalculator.calculateTimeSpent(startNode, startTime, skier)
+                .orElseThrow(() -> new RoutingException(RoutingError.NO_ROUTE_FOUND.getMessage()));
+        LocalTime dfsStartTime = startTime.plusSeconds(firstNodeTime);
+
+        if (dfsStartTime.isAfter(endTime)) {
+            throw new RoutingException(RoutingError.NO_ROUTE_FOUND.getMessage());
+        }
+
+        RouteRequest request = new RouteRequest(graph, skier, startNode, startNode, dfsStartTime, endTime);
+        Optional<Route> foundRouteOpt = planner.planRoute(request);
+        if (foundRouteOpt.isEmpty()) {
             throw new RoutingException(RoutingError.NO_ROUTE_FOUND.getMessage());
         }
 
         // If a route is found, set it as the current route and initialize the state
         this.sessionEndTime = endTime;
-        this.currentRoute = foundRoute.get();
+        this.currentRoute = foundRouteOpt.get();
         this.currentStepIndex = 0;
         this.currentTime = startTime;
         this.pendingNode = null;
@@ -166,7 +179,7 @@ public class SkiEngine {
     public String showNextStep() throws RoutingException {
         requireActiveRoute();
         List<Node> route = currentRoute.getRoute();
-        if (currentStepIndex >= route.size() - 1) {
+        if (currentStepIndex >= route.size()) {
             return null; // No more steps, route is complete
         }
 
@@ -218,7 +231,7 @@ public class SkiEngine {
         // Prepare the route request for the alternative route, treating the current
         // node as forbidden
         Node currentNode = currentRoute.getRoute().get(currentStepIndex - 1);
-        Node destinationNode = currentRoute.getRoute().get(currentRoute.getRoute().size() - 1);
+        Node destinationNode = currentRoute.getRoute().get(0);
 
         Set<Node> forbiddenNodes = new HashSet<>();
         forbiddenNodes.add(pendingNode);
@@ -267,10 +280,18 @@ public class SkiEngine {
     }
 
     private void replanDynamic() throws RoutingException {
-        requireActiveRoute();
+        if (currentRoute == null || currentStepIndex >= currentRoute.getRoute().size() - 1) {
+            return; // No active route, nothing to replan
+        }
+
+        if (currentStepIndex == 0) {
+            String startNodeId = currentRoute.getRoute().get(0).getId();
+            planRoute(startNodeId, currentTime, sessionEndTime);
+            return;
+        }
 
         Node currentNode = currentRoute.getRoute().get(Math.max(0, currentStepIndex - 1));
-        Node destinationNode = currentRoute.getRoute().get(currentRoute.getRoute().size() - 1);
+        Node destinationNode = currentRoute.getRoute().get(0);
 
         RouteRequest request = new RouteRequest(
                 this.graph, this.skier, currentNode, destinationNode, currentTime, sessionEndTime,
@@ -281,7 +302,6 @@ public class SkiEngine {
             stitchRoutes(newRouteOpt.get());
         } else {
             this.currentRoute = null; // No valid route found, reset current route
-            throw new RoutingException(RoutingError.NO_ROUTE_WITH_PREFERENCES.getMessage());
         }
     }
 

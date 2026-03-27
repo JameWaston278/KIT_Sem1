@@ -52,16 +52,16 @@ public class RouteComparator implements Comparator<Route> {
         for (Node node : route.getRoute()) {
             if (node instanceof Piste piste) {
                 // Increase score for liked attributes, decrease for disliked attributes
-                if (skier.getPreference(piste.getDifficulty()).equals(Preference.LIKE)) {
+                if (Preference.LIKE.equals(skier.getPreference(piste.getDifficulty()))) {
                     score++;
                 }
-                if (skier.getPreference(piste.getDifficulty()).equals(Preference.DISLIKE)) {
+                if (Preference.DISLIKE.equals(skier.getPreference(piste.getDifficulty()))) {
                     score--;
                 }
-                if (skier.getPreference(piste.getSurface()).equals(Preference.LIKE)) {
+                if (Preference.LIKE.equals(skier.getPreference(piste.getSurface()))) {
                     score++;
                 }
-                if (skier.getPreference(piste.getSurface()).equals(Preference.DISLIKE)) {
+                if (Preference.DISLIKE.equals(skier.getPreference(piste.getSurface()))) {
                     score--;
                 }
             }

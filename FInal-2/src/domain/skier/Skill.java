@@ -8,7 +8,7 @@ package domain.skier;
  * @author udqch
  */
 public enum Skill {
-    
+
     /** The modifier for beginner skiers. */
     BEGINNER(1.35),
     /** The modifier for intermediate skiers. */

@@ -11,10 +11,10 @@ public enum Surface {
 
     /** The modifier for regular surface conditions. */
     REGULAR(1.00),
-    /** The modifier for icy surface conditions. */
-    ICY(1.20),
     /** The modifier for bumpy surface conditions. */
-    BUMPY(1.30);
+    BUMPY(1.20),
+    /** The modifier for icy surface conditions. */
+    ICY(1.30);
 
     private final double modifier;
 

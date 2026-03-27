@@ -46,23 +46,23 @@ public class SystemCLI {
     private static final String MSG_FAILED_LOAD_GRAPH = "failed to load graph from file: %s";
 
     private enum LoadTarget {
-        AREA
+        area
     }
 
     private enum ListTarget {
-        LIFTS, SLOPES
+        lifts, slopes
     }
 
     private enum SetTarget {
-        SKILL, GOAL
+        skill, goal
     }
 
     private enum PreferenceTarget {
-        PREFERENCES
+        preferences
     }
 
     private enum ShowTarget {
-        ROUTE
+        route
     }
 
     private final SkiEngine engine;
@@ -131,7 +131,7 @@ public class SystemCLI {
     private void processCommand(String input) throws SkiException {
         String[] parts = input.split(REGEX_WHITESPACE);
 
-        Command command = EnumParser.parseEnum(Command.class, parts[0])
+        Command command = Command.fromString(parts[0])
                 .orElseThrow(() -> new CommandException(CommandError.UNKNOWN_COMMAND.getMessage(parts[0])));
 
         CommandHandler handler = commandHandlers.get(command);
@@ -145,7 +145,7 @@ public class SystemCLI {
         requireArgs(parts, 3);
         LoadTarget target = parseEnumArgs(parts[0], parts[1], LoadTarget.class);
 
-        if (target == LoadTarget.AREA) {
+        if (target == LoadTarget.area) {
             String filePath = parts[2];
             try {
                 List<String> rawContents = Files.readAllLines(Path.of(filePath));
@@ -166,7 +166,7 @@ public class SystemCLI {
         requireArgs(parts, 2);
         ListTarget target = parseEnumArgs(parts[0], parts[1], ListTarget.class);
 
-        String output = (target == ListTarget.LIFTS)
+        String output = (target == ListTarget.lifts)
                 ? GraphFormatter.listLifts(engine.getGraph())
                 : GraphFormatter.listPistes(engine.getGraph());
 
@@ -180,7 +180,7 @@ public class SystemCLI {
         requireArgs(parts, 3);
         SetTarget target = parseEnumArgs(parts[0], parts[1], SetTarget.class);
 
-        if (target == SetTarget.SKILL) {
+        if (target == SetTarget.skill) {
             Skill skill = parseEnumArgs(parts[0], parts[2], Skill.class);
             engine.setSkill(skill);
         } else {
@@ -215,7 +215,7 @@ public class SystemCLI {
         requireArgs(parts, 2);
         PreferenceTarget target = parseEnumArgs(parts[0], parts[1], PreferenceTarget.class);
 
-        if (target == PreferenceTarget.PREFERENCES) {
+        if (target == PreferenceTarget.preferences) {
             engine.resetPreferences();
         }
     }
@@ -276,7 +276,7 @@ public class SystemCLI {
         requireArgs(parts, 2);
         ShowTarget target = parseEnumArgs(parts[0], parts[1], ShowTarget.class);
 
-        if (target == ShowTarget.ROUTE) {
+        if (target == ShowTarget.route) {
             System.out.println(engine.showCurrentRoute());
         }
     }
