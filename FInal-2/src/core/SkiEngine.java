@@ -314,7 +314,7 @@ public class SkiEngine {
     }
 
     private void replanDynamic() throws RoutingException {
-        if (currentRoute == null || currentStepIndex >= currentRoute.getRoute().size() - 1) {
+        if (currentRoute == null || currentStepIndex >= currentRoute.getRoute().size()) {
             return; // No active route, nothing to replan
         }
 

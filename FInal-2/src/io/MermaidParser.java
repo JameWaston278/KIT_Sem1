@@ -58,15 +58,20 @@ public class MermaidParser {
         SkiGraph graph = new SkiGraph();
         List<String> edgeLines = new ArrayList<>();
 
-        if (contents.isEmpty() || !contents.get(0).trim().equals(GRAPH_START)) {
+        if (contents.isEmpty() || contents.isEmpty()) {
             throw new ParseException(ParseError.INVALID_FILE.getMessage());
         }
-        System.out.println(contents.get(0));
+
+        for (String line : contents) {
+            System.out.println(line);
+        }
+
+        if (!contents.get(0).trim().equals(GRAPH_START)) {
+            throw new ParseException(ParseError.INVALID_FILE.getMessage());
+        }
 
         for (int i = 1; i < contents.size(); i++) {
-            System.out.println(contents.get(i));
             String line = contents.get(i).trim();
-
             if (line.isEmpty()) {
                 continue;
             }
@@ -128,13 +133,19 @@ public class MermaidParser {
 
     private Lift createLift(Matcher matcher, boolean isTalstation) throws ParseException {
         try {
+            LocalTime startTime = LocalTime.parse(matcher.group(3));
+            LocalTime endTime = LocalTime.parse(matcher.group(4));
+            if (!startTime.isBefore(endTime)) {
+                throw new ParseException(ParseError.INVALID_TIME_RANGE.getMessage(matcher.group(1)));
+            }
+
             return new Lift(
                     matcher.group(1),
                     EnumParser.parseEnum(LiftType.class, matcher.group(2))
                             .orElseThrow(() -> new ParseException(
                                     ParseError.INVALID_FORMAT.getMessage(LiftType.class, matcher.group(1)))),
-                    LocalTime.parse(matcher.group(3)),
-                    LocalTime.parse(matcher.group(4)),
+                    startTime,
+                    endTime,
                     Integer.parseInt(matcher.group(5)),
                     Integer.parseInt(matcher.group(6)),
                     isTalstation);

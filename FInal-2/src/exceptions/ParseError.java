@@ -18,6 +18,8 @@ public enum ParseError {
     /** Error indicating that a line in the input file is malformed. */
     INVALID_FORMAT("Invalid %s format in %s."),
     /** Error indicating that a line in the input file is malformed. */
+    INVALID_TIME_RANGE("Start time must be before end time in lift %s."),
+    /** Error indicating that a line in the input file is malformed. */
     UNRECOGNIZED_NODE("Unrecognized node in connection %s and %s."),
 
     /** Error indicating that a line in the input file is malformed. */
