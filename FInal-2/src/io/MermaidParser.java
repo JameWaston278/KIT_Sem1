@@ -16,7 +16,6 @@ import domain.graph.SkiGraph;
 import domain.graph.Surface;
 import exceptions.ParseError;
 import exceptions.ParseException;
-import exceptions.SkiException;
 import utils.EnumParser;
 
 /****
@@ -31,15 +30,17 @@ import utils.EnumParser;
  */
 public class MermaidParser {
 
+    private static final String GRAPH_START = "graph";
     private static final Pattern TRANSIT_LIFT_PATTERN = Pattern.compile(
-            "^([a-zA-Z0-9_]+)\\s*\\[\\[\\1<br/>([A-Z]+);\\s*([0-9]{2}:[0-9]{2});\\s*([0-9]{2}:[0-9]{2});\\s*([0-9]+);\\s*([0-9]+)\\]\\]$");
+            "^(\\w+)\\s*\\[\\[\\1<br\\s*/>([A-Z]+);\\s*(\\d{2}:\\d{2});\\s*(\\d{2}:\\d{2});\\s*(\\d+);\\s*(\\d+)\\]\\]$");
     private static final Pattern REGULAR_LIFT_PATTERN = Pattern.compile(
-            "^([a-zA-Z0-9_]+)\\s*\\[\\1<br/>([A-Z]+);\\s*([0-9]{2}:[0-9]{2});\\s*([0-9]{2}:[0-9]{2});\\s*([0-9]+);\\s*([0-9]+)\\]$");
+            "^(\\w+)\\s*\\[\\1<br\\s*/>([A-Z]+);\\s*(\\d{2}:\\d{2});\\s*(\\d{2}:\\d{2});\\s*(\\d+);\\s*(\\d+)\\]$");
     private static final Pattern PISTE_PATTERN = Pattern.compile(
-            "^([a-zA-Z0-9_]+)\\s*\\(\\[\\1<br/>([A-Z]+);\\s*([A-Z]+);\\s*([0-9]+);\\s*([0-9]+)\\]\\)$");
+            "^(\\w+)\\s*\\(\\[\\1<br\\s*/>([A-Z]+);\\s*([A-Z]+);\\s*(\\d+);\\s*(\\d+)\\]\\)$");
     private static final Pattern EDGE_PATTERN = Pattern.compile(
-            "^([a-zA-Z0-9_]+)\\s*-->\\s*([a-zA-Z0-9_]+)$");
+            "^(\\w+)\\s*-->\\s*(\\w+)$");
     private static final String EDGE_CONNECTION = "-->";
+    private static final String CONNECTION = "Connection";
 
     /**
      * Parses a Mermaid graph definition from the specified file and constructs a
@@ -57,31 +58,30 @@ public class MermaidParser {
         SkiGraph graph = new SkiGraph();
         List<String> edgeLines = new ArrayList<>();
 
-        try {
-            if (contents.isEmpty() || contents.get(0).trim().isEmpty()) {
-                throw new ParseException(ParseError.INVALID_FILE.getMessage());
-            }
-
-            for (int i = 1; i < contents.size(); i++) {
-                String line = contents.get(i).trim();
-                if (line.isEmpty()) {
-                    continue;
-                }
-                if (line.contains(EDGE_CONNECTION)) {
-                    edgeLines.add(line);
-                } else {
-                    parseNode(line, graph);
-                }
-            }
-
-            for (String line : edgeLines) {
-                parseEdge(line, graph);
-            }
-
-            graph.validate();
-        } catch (SkiException e) {
-            throw new ParseException(e.getMessage());
+        if (contents.isEmpty() || !contents.get(0).trim().equals(GRAPH_START)) {
+            throw new ParseException(ParseError.INVALID_FILE.getMessage());
         }
+        System.out.println(contents.get(0));
+
+        for (int i = 1; i < contents.size(); i++) {
+            System.out.println(contents.get(i));
+            String line = contents.get(i).trim();
+
+            if (line.isEmpty()) {
+                continue;
+            }
+            if (line.contains(EDGE_CONNECTION)) {
+                edgeLines.add(line);
+            } else {
+                parseNode(line, graph);
+            }
+        }
+
+        for (String line : edgeLines) {
+            parseEdge(line, graph);
+        }
+
+        graph.validate();
         return graph;
     }
 
@@ -105,7 +105,7 @@ public class MermaidParser {
         }
 
         // If the line doesn't match any known pattern, it's an invalid file format
-        throw new ParseException(ParseError.INVALID_FILE.getMessage());
+        throw new ParseException(ParseError.INVALID_FORMAT.getMessage(Node.class, line));
     }
 
     private void parseEdge(String line, SkiGraph graph) throws ParseException {
@@ -123,7 +123,7 @@ public class MermaidParser {
             graph.addEdge(fromNode, toNode);
             return;
         }
-        throw new ParseException(ParseError.INVALID_FILE.getMessage());
+        throw new ParseException(ParseError.INVALID_FORMAT.getMessage(CONNECTION, line));
     }
 
     private Lift createLift(Matcher matcher, boolean isTalstation) throws ParseException {

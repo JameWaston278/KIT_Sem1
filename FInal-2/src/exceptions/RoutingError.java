@@ -16,7 +16,11 @@ public enum RoutingError {
     /** Error indicating that the end node for route planning is invalid. */
     INVALID_END_NODE("The end node must be a ski slope or a destination."),
     /** Error indicating that the graph for route planning is not loaded. */
-    GRAPH_NOT_LOADED("No graph loaded. Please load a graph before planning a route."),
+    NO_GRAPH_LOADED("No graph loaded. Please load a graph before planning a route."),
+    /** Error indicating that the skier's profile is incomplete. */
+    INCOMPLETE_PROFILE("Skier profile is incomplete. Please set skill level and goal before planning a route."),
+    /** Error indicating that an active route already exists. */
+    EXISTING_ACTIVE_ROUTE("An active route already exists. Please abort or finish it first."),
     /** Error indicating that no valid route was found for the given constraints. */
     NO_ROUTE_FOUND("No valid route found for the given constraints."),
     /** Error indicating that no active route is available. */

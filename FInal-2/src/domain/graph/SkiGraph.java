@@ -24,18 +24,7 @@ import exceptions.ParseException;
 public class SkiGraph {
     private final Map<String, Node> nodes = new HashMap<>();
     private final Map<Node, List<Node>> adjacencyList = new HashMap<>();
-
-    // public void printGraph() {
-    // for (Node node : nodes.values()) {
-    // System.out.println(node.getId());
-    // List<Node> adjacentNodes = adjacencyList.get(node);
-    // if (adjacentNodes != null) {
-    // for (Node adjacent : adjacentNodes) {
-    // System.out.println(" --> " + adjacent.getId());
-    // }
-    // }
-    // }
-    // }
+    private String duplicateErrorMessage = null;
 
     /**
      * Adds a node to the graph.
@@ -46,7 +35,9 @@ public class SkiGraph {
     public void addNode(Node node) throws ParseException {
         // Check if a node with the same ID already exists in the graph
         if (nodes.containsKey(node.getId())) {
-            throw new ParseException(ParseError.EXISTING_NODE.getMessage(node.getId()));
+            if (this.duplicateErrorMessage == null) {
+                this.duplicateErrorMessage = ParseError.EXISTING_NODE.getMessage(node.getId());
+            }
         }
 
         // If the node is unique, add it to the graph and initialize its adjacency list
@@ -90,6 +81,9 @@ public class SkiGraph {
      * @throws ParseException if any of the validation rules are violated
      */
     public void validate() throws ParseException {
+        if (this.duplicateErrorMessage != null) {
+            throw new ParseException(this.duplicateErrorMessage);
+        }
         if (nodes.isEmpty()) {
             throw new ParseException(ParseError.EMPTY_GRAPH.getMessage());
         }

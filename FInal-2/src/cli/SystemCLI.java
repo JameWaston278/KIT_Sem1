@@ -20,6 +20,7 @@ import domain.skier.Preference;
 import domain.skier.Skill;
 import exceptions.CommandError;
 import exceptions.CommandException;
+import exceptions.ParseException;
 import exceptions.SkiException;
 import io.MermaidParser;
 import utils.EnumParser;
@@ -46,22 +47,31 @@ public class SystemCLI {
     private static final String MSG_FAILED_LOAD_GRAPH = "failed to load graph from file: %s";
 
     private enum LoadTarget {
+        /** The target for loading an area */
         area
     }
 
     private enum ListTarget {
-        lifts, slopes
+        /** The target for listing lifts */
+        lifts,
+        /** The target for listing slopes */
+        slopes
     }
 
     private enum SetTarget {
-        skill, goal
+        /** The target for setting skill level */
+        skill,
+        /** The target for setting goal */
+        goal
     }
 
     private enum PreferenceTarget {
+        /** The target for resetting preferences */
         preferences
     }
 
     private enum ShowTarget {
+        /** The target for showing the current route */
         route
     }
 
@@ -133,6 +143,9 @@ public class SystemCLI {
 
         Command command = Command.fromString(parts[0])
                 .orElseThrow(() -> new CommandException(CommandError.UNKNOWN_COMMAND.getMessage(parts[0])));
+        if (command != Command.TAKE && command != Command.ALTERNATIVE && command != Command.NEXT) {
+            engine.resetPendingState();
+        }
 
         CommandHandler handler = commandHandlers.get(command);
         if (handler != null) {
@@ -153,10 +166,8 @@ public class SystemCLI {
                 MermaidParser parser = new MermaidParser();
                 SkiGraph graph = parser.parse(rawContents);
                 engine.setGraph(graph);
-
-                System.out.println(String.join(System.lineSeparator(), rawContents));
             } catch (IOException e) {
-                throw new CommandException(MSG_FAILED_LOAD_GRAPH.formatted(e.getMessage()));
+                throw new ParseException(MSG_FAILED_LOAD_GRAPH.formatted(e.getMessage()));
             }
         }
     }
